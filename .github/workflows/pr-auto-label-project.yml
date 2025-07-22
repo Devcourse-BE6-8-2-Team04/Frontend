@@ -71,5 +71,5 @@ jobs:
       - name: PR을 프로젝트에 추가
         uses: actions/add-to-project@v1.0.2
         with:
-          project-url: "https://github.com/orgs/Devcourse-BE6-8-2-Team4/projects/2"
+          project-url: "https://github.com/orgs/Devcourse-BE6-8-2-Team04/projects/2"
           github-token: ${{ secrets.PROJECT_ACCESS_TOKEN }}
