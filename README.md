@@ -2,11 +2,11 @@
 
 ## 브랜치 전략
 
-기능별 접두사 앞에 붙이기
+기능별 접두사 + 이슈번호
 
 - 예시:  
-  - `feature/login-ui`  
-  - `fix/user-auth`
+  - `feature/1`  
+  - `fix/3`
 
 
 ## Git Issue 활용 방식
