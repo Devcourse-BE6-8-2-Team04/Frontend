@@ -208,7 +208,7 @@ export default function Page() {
                                 </td>
                                 <td className="px-4 py-3">
                                     <Link
-                                        href="#"
+                                        href={`/comments/${comment.id}`}
                                         className="text-blue-600 hover:underline font-medium"
                                     >
                                         {comment.sentence}
