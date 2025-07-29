@@ -1,13 +1,23 @@
 "use client";
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import Modal from "./Modal";
+import type { components } from "@/lib/backend/apiV1/schema";
+import { apiFetch } from "@/lib/backend/client";
+import Link from "next/link";
+
+type CommentDto = components["schemas"]["CommentDto"];
 
 export default function Page() {
-    const [comments, setComments] = useState<string[]>([]);
+    const [comments, setComments] = useState<CommentDto[]>([]);
     const [showModal, setShowModal] = useState(false);
 
+    useEffect(() => {
+        apiFetch(`/api/v1/comments`).then((res) => setComments(res.content));
+    }, []);
+
     // 코멘트 등록
-    const handleCreate = (comment: string) => {
+    const handleCreate = (comment: CommentDto) => {
         setComments([comment, ...comments]);
         setShowModal(false);
     };
@@ -23,11 +33,19 @@ export default function Page() {
                     코멘트 작성
                 </button>
             </div>
-            <ul className="space-y-4">
-                {comments.map((comment, idx) => (
-                    <li key={idx} className="bg-white p-4 rounded shadow text-black">{comment}</li>
-                ))}
-            </ul>
+
+            {/* 코멘트 목록 */}
+            {comments.length == 0 && <div>글이 없습니다.</div>}
+            {comments.length > 0 && (
+                <ul className="space-y-4">
+                    {comments.map((comment) => (
+                        <li key={comment.id} className="bg-white p-4 rounded shadow text-black">
+                            <Link href="#">{comment.sentence}</Link>
+                        </li>
+                    ))}
+                </ul>
+            )}
+
             {showModal && (
                 <Modal
                     onClose={() => setShowModal(false)}
