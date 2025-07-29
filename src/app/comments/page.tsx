@@ -12,7 +12,7 @@ type CommentDto = components["schemas"]["CommentDto"];
 interface SearchFilters {
     location?: string;
     feelsLikeTemperature?: number;
-    date?: number;
+    month?: number;
 }
 
 export default function Page() {
@@ -27,7 +27,7 @@ export default function Page() {
     const [tempFilterInputs, setTempFilterInputs] = useState({
         location: "",
         feelsLikeTemperature: "",
-        date: ""
+        month: ""
     })
 
     // API 호출 함수
@@ -41,14 +41,17 @@ export default function Page() {
         if (searchFilters.feelsLikeTemperature !== undefined && searchFilters.feelsLikeTemperature !== null) {
             queryParams += `&feelsLikeTemperature=${searchFilters.feelsLikeTemperature}`;
         }
-        if (searchFilters.date !== undefined && searchFilters.date !== null) {
-            queryParams += `&date=${searchFilters.date}`;
+        if (searchFilters.month !== undefined && searchFilters.month !== null) {
+            queryParams += `&month=${searchFilters.month}`;
         }
 
-        const res = await apiFetch(`/api/v1/comments?${queryParams}`);
-        setComments(res.content || []);
-        setTotalPages(res.totalPages ?? 0);
-        setTotalElements(res.totalElements);
+        apiFetch(`/api/v1/comments?${queryParams}`).then((res) => {
+            setComments(res.content || []);
+            setTotalPages(res.totalPages ?? 0);
+            setTotalElements(res.totalElements);
+        }).catch((error) => {
+            alert(`${error.resultCode} : ${error.msg}`);
+        })
     };
 
     useEffect(() => {
@@ -65,10 +68,10 @@ export default function Page() {
         if (tempFilterInputs.feelsLikeTemperature && !isNaN(Number(tempFilterInputs.feelsLikeTemperature))) {
             newFilters.feelsLikeTemperature = Number(tempFilterInputs.feelsLikeTemperature);
         }
-        if (tempFilterInputs.date && !isNaN(Number(tempFilterInputs.date))) {
-            const monthNum = Number(tempFilterInputs.date);
+        if (tempFilterInputs.month && !isNaN(Number(tempFilterInputs.month))) {
+            const monthNum = Number(tempFilterInputs.month);
             if (monthNum >= 1 && monthNum <= 12) {
-                newFilters.date = monthNum;
+                newFilters.month = monthNum;
             }
         }
 
@@ -81,7 +84,7 @@ export default function Page() {
         setTempFilterInputs({
             location: "",
             feelsLikeTemperature: "",
-            date: ""
+            month: ""
         });
         setFilters({});
         setPage(0);
@@ -107,7 +110,7 @@ export default function Page() {
                 <h1 className="text-2xl font-bold text-black">코멘트 목록</h1>
                 <button
                     onClick={() => setShowModal(true)}
-                    className="px-4 py-2 bg-blue-500 text-black rounded cursor-pointer"
+                    className="px-4 py-2 bg-blue-500 text-white rounded cursor-pointer"
                 >
                     코멘트 작성
                 </button>
@@ -148,8 +151,8 @@ export default function Page() {
                             type="number"
                             min="1"
                             max="12"
-                            value={tempFilterInputs.date}
-                            onChange={(e) => handleFilterChange('date', e.target.value)}
+                            value={tempFilterInputs.month}
+                            onChange={(e) => handleFilterChange('month', e.target.value)}
                             placeholder="월 입력"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
@@ -171,12 +174,12 @@ export default function Page() {
                 </div>
                 
                 {/* 현재 적용된 필터 표시 */}
-                {(filters.location || filters.feelsLikeTemperature !== undefined || filters.date !== undefined) && (
+                {(filters.location || filters.feelsLikeTemperature !== undefined || filters.month !== undefined) && (
                     <div className="mt-3 p-2 bg-blue-100 rounded">
                         <span className="text-sm text-gray-700">적용된 필터: </span>
-                        {filters.location && <span className="text-sm bg-blue-200 px-2 py-1 rounded mr-2">지역: {filters.region}</span>}
-                        {filters.feelsLikeTemperature !== undefined && <span className="text-sm bg-blue-200 px-2 py-1 rounded mr-2">온도: {filters.temperature}°C</span>}
-                        {filters.date !== undefined && <span className="text-sm bg-blue-200 px-2 py-1 rounded mr-2">월: {filters.month}월</span>}
+                        {filters.location && <span className="text-sm bg-blue-200 px-2 py-1 rounded mr-2">지역: {filters.location}</span>}
+                        {filters.feelsLikeTemperature !== undefined && <span className="text-sm bg-blue-200 px-2 py-1 rounded mr-2">온도: {filters.feelsLikeTemperature}°C</span>}
+                        {filters.month !== undefined && <span className="text-sm bg-blue-200 px-2 py-1 rounded mr-2">월: {filters.month}월</span>}
                     </div>
                 )}
             </div>
