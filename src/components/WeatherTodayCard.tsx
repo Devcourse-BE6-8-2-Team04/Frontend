@@ -1,10 +1,14 @@
 "use client";
 
+import { WeatherInfo } from "@/types/weather";
 import { dummyWeather } from "@/utils/dummyWeather";
 import { weatherThemeMap } from "@/utils/weatherThemeMap";
 
-export default function WeatherTodayCard() {
-  const weather = dummyWeather;
+export default function WeatherTodayCard({
+  weather,
+}: {
+  weather: WeatherInfo;
+}) {
   const theme = weatherThemeMap[weather.weather] ?? weatherThemeMap.DEFAULT;
 
   return (
