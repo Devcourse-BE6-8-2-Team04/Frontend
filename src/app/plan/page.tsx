@@ -1,19 +1,50 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
+
+// 데이터 구조에 대한 타입 정의
+interface Cloth {
+  id: number;
+  clothName: string;
+  imageUrl: string;
+  category: string;
+  maxFeelsLike: number;
+  minFeelsLike: number;
+}
+
+interface ExtraCloth {
+  id: number;
+  clothName: string;
+  imageUrl: string;
+  weather: string;
+}
+
+interface ApiResponse {
+  clothes: {
+    [category: string]: Cloth[];
+  };
+  extraClothes: {
+    EXTRA: ExtraCloth[];
+  };
+}
 
 export default function Plan() {
   const [destination, setDestination] = useState('');
   const [checkInDate, setCheckInDate] = useState('');
   const [checkOutDate, setCheckOutDate] = useState('');
-  const [resultText, setResultText] = useState('API 요청 결과가 여기에 표시됩니다.');
+  const [resultData, setResultData] = useState<ApiResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [warningMessage, setWarningMessage] = useState('');
 
   const handleConfirm = async () => {
     setWarningMessage('');
+    setError(null);
+    setResultData(null);
 
     if (!destination || !checkInDate || !checkOutDate) {
-      setResultText('모든 필드를 채워주세요.');
+      setError('모든 필드를 채워주세요.');
       return;
     }
 
@@ -31,25 +62,80 @@ export default function Plan() {
       end: checkOutDate,
     });
 
+    setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/cloth?${params.toString()}`);
-
+      const response = await fetch(`/api/v1/cloth?${params.toString()}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      const data = await response.json();
-      setResultText(JSON.stringify(data, null, 2));
-    } catch (error) {
-      console.error('API 요청 에러:', error);
-      setResultText('API 요청에 실패했습니다.');
+      const data: ApiResponse = await response.json();
+      setResultData(data);
+    } catch (err) {
+      console.error('API 요청 에러:', err);
+      setError('API 요청에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const renderResults = () => {
+    if (isLoading) {
+      return <div className="text-gray-500">로딩 중...</div>;
+    }
+
+    if (error) {
+      return <div className="text-red-500">{error}</div>;
+    }
+
+    if (!resultData) {
+      return <div className="text-gray-500">API 요청 결과가 여기에 표시됩니다.</div>;
+    }
+
+    return (
+      <div className="w-full">
+        {Object.entries(resultData.clothes).map(([category, clothes]) => (
+          <div key={category} className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">{category}</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {clothes.map((cloth) => (
+                <div key={cloth.id} className="border rounded-lg shadow-md overflow-hidden">
+                  <div className="relative w-full h-40">
+                    <Image src={cloth.imageUrl} alt={cloth.clothName} layout="fill" objectFit="cover" />
+                  </div>
+                  <div className="p-2 text-center">
+                    <p className="font-semibold text-gray-700">{cloth.clothName}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {resultData.extraClothes.EXTRA && resultData.extraClothes.EXTRA.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">챙겨가면 좋은 것들</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {resultData.extraClothes.EXTRA.map((item) => (
+                <div key={item.id} className="border rounded-lg shadow-md overflow-hidden">
+                  <div className="relative w-full h-40">
+                    <Image src={item.imageUrl} alt={item.clothName} layout="fill" objectFit="cover" />
+                  </div>
+                  <div className="p-2 text-center">
+                    <p className="font-semibold text-gray-700">{item.clothName}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="min-h-screen flex flex-col items-center bg-green-100">
-      <div className="w-full max-w-5xl mt-10 p-4 bg-white rounded-lg shadow-md flex items-end gap-4">
-        <div className="flex flex-col basis-0 grow-[1]">
+    <div className="min-h-screen flex flex-col items-center bg-gray-50 p-4">
+      <div className="w-full max-w-5xl mt-10 p-6 bg-white rounded-lg shadow-lg flex items-end gap-4">
+        <div className="flex flex-col flex-grow">
           <label htmlFor="destination" className="text-base font-semibold text-gray-700 mb-2">여행지</label>
           <input
             type="text"
@@ -60,7 +146,7 @@ export default function Plan() {
             onChange={(e) => setDestination(e.target.value)}
           />
         </div>
-        <div className="flex flex-col basis-0 grow-[2]">
+        <div className="flex flex-col flex-grow">
           <label htmlFor="checkInDate" className="text-base font-semibold text-gray-700 mb-2">체크인</label>
           <input
             type="date"
@@ -70,7 +156,7 @@ export default function Plan() {
             onChange={(e) => setCheckInDate(e.target.value)}
           />
         </div>
-        <div className="flex flex-col basis-0 grow-[2]">
+        <div className="flex flex-col flex-grow">
           <label htmlFor="checkOutDate" className="text-base font-semibold text-gray-700 mb-2">체크아웃</label>
           <input
             type="date"
@@ -83,17 +169,19 @@ export default function Plan() {
         <button
           className="px-6 py-2 bg-blue-600 text-white font-bold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-shrink-0"
           onClick={handleConfirm}
+          disabled={isLoading}
         >
-          확인
+          {isLoading ? '로딩중...' : '확인'}
         </button>
       </div>
-      <div className="w-full max-w-5xl mt-10 p-4 bg-white rounded-lg shadow-md min-h-96 flex items-center justify-center text-gray-500">
-        {resultText}
+      
+      <div className="w-full max-w-5xl mt-10 p-6 bg-white rounded-lg shadow-lg min-h-[24rem] flex items-center justify-center">
+        {renderResults()}
       </div>
 
       {warningMessage && (
-        <div className="fixed inset-0 z-40"> {/* Transparent overlay that blocks clicks */} 
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg text-center z-50" onClick={(e) => e.stopPropagation()}> {/* Warning message box, stop propagation to prevent closing when clicking inside */} 
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40" onClick={() => setWarningMessage('')}>
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center z-50" onClick={(e) => e.stopPropagation()}>
             <p className="text-lg font-semibold text-red-600 mb-4">{warningMessage}</p>
             <button
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
