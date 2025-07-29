@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, createRef, useEffect } from 'react';
 import Image from 'next/image';
 
 // 데이터 구조에 대한 타입 정의
@@ -29,6 +29,11 @@ interface ApiResponse {
   };
 }
 
+interface ScrollState {
+  canScrollLeft: boolean;
+  canScrollRight: boolean;
+}
+
 export default function Plan() {
   const [destination, setDestination] = useState('');
   const [checkInDate, setCheckInDate] = useState('');
@@ -37,6 +42,13 @@ export default function Plan() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warningMessage, setWarningMessage] = useState('');
+
+  const scrollRefs = useRef<{
+    [key: string]: React.RefObject<HTMLDivElement>
+  }>({});
+  const [scrollStates, setScrollStates] = useState<{
+    [key: string]: ScrollState
+  }>({});
 
   const handleConfirm = async () => {
     setWarningMessage('');
@@ -70,11 +82,51 @@ export default function Plan() {
       }
       const data: ApiResponse = await response.json();
       setResultData(data);
+
+      const newRefs: { [key: string]: React.RefObject<HTMLDivElement> } = {};
+      const newScrollStates: { [key: string]: ScrollState } = {};
+      Object.keys(data.clothes).forEach(category => {
+        newRefs[category] = createRef<HTMLDivElement>();
+        newScrollStates[category] = { canScrollLeft: false, canScrollRight: true };
+      });
+      if (data.extraClothes.EXTRA) {
+        newRefs['extra'] = createRef<HTMLDivElement>();
+        newScrollStates['extra'] = { canScrollLeft: false, canScrollRight: true };
+      }
+      scrollRefs.current = newRefs;
+      setScrollStates(newScrollStates);
+
     } catch (err) {
       console.error('API 요청 에러:', err);
       setError('API 요청에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const checkScrollability = (key: string) => {
+    const ref = scrollRefs.current[key];
+    if (ref && ref.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = ref.current;
+      const canScrollLeft = scrollLeft > 0;
+      const canScrollRight = scrollLeft < scrollWidth - clientWidth;
+      setScrollStates(prev => ({ ...prev, [key]: { canScrollLeft, canScrollRight } }));
+    }
+  };
+
+  useEffect(() => {
+    Object.keys(scrollRefs.current).forEach(key => {
+        checkScrollability(key);
+    });
+  }, [resultData]);
+
+  const handleScroll = (key: string, direction: 'left' | 'right') => {
+    const ref = scrollRefs.current[key];
+    if (ref && ref.current) {
+      const scrollAmount = direction === 'left' ? -300 : 300;
+      ref.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      // Give time for scroll to finish before checking
+      setTimeout(() => checkScrollability(key), 500);
     }
   };
 
@@ -94,11 +146,12 @@ export default function Plan() {
     return (
       <div className="w-full">
         {Object.entries(resultData.clothes).map(([category, clothes]) => (
-          <div key={category} className="mb-8">
+          <div key={category} className="mb-8 relative">
             <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">{category}</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <button onClick={() => handleScroll(category, 'left')} disabled={!scrollStates[category]?.canScrollLeft} className="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed">&lt;</button>
+            <div ref={scrollRefs.current[category]} onScroll={() => checkScrollability(category)} className="flex overflow-x-auto space-x-4 p-2 scroll-smooth scrollbar-hide">
               {clothes.map((cloth) => (
-                <div key={cloth.id} className="border rounded-lg shadow-md overflow-hidden">
+                <div key={cloth.id} className="flex-shrink-0 w-48 border rounded-lg shadow-md overflow-hidden">
                   <div className="relative w-full h-40">
                     <Image src={cloth.imageUrl} alt={cloth.clothName} layout="fill" objectFit="cover" />
                   </div>
@@ -108,15 +161,17 @@ export default function Plan() {
                 </div>
               ))}
             </div>
+            <button onClick={() => handleScroll(category, 'right')} disabled={!scrollStates[category]?.canScrollRight} className="absolute right-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed">&gt;</button>
           </div>
         ))}
 
         {resultData.extraClothes.EXTRA && resultData.extraClothes.EXTRA.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-8 relative">
             <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">챙겨가면 좋은 것들</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <button onClick={() => handleScroll('extra', 'left')} disabled={!scrollStates['extra']?.canScrollLeft} className="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed">&lt;</button>
+            <div ref={scrollRefs.current['extra']} onScroll={() => checkScrollability('extra')} className="flex overflow-x-auto space-x-4 p-2 scroll-smooth scrollbar-hide">
               {resultData.extraClothes.EXTRA.map((item) => (
-                <div key={item.id} className="border rounded-lg shadow-md overflow-hidden">
+                <div key={item.id} className="flex-shrink-0 w-48 border rounded-lg shadow-md overflow-hidden">
                   <div className="relative w-full h-40">
                     <Image src={item.imageUrl} alt={item.clothName} layout="fill" objectFit="cover" />
                   </div>
@@ -126,6 +181,7 @@ export default function Plan() {
                 </div>
               ))}
             </div>
+            <button onClick={() => handleScroll('extra', 'right')} disabled={!scrollStates['extra']?.canScrollRight} className="absolute right-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed">&gt;</button>
           </div>
         )}
       </div>
