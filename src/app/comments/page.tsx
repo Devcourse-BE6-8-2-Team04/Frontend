@@ -235,11 +235,11 @@ export default function Page() {
                 </table>
             )}
 
-            <div className="mt-8 flex justify-center items-center space-x-6">
+            <div className="mt-6 flex justify-center items-center space-x-6">
                 <button
                     disabled={page === 0}
                     onClick={() => setPage(page - 1)}
-                    className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50 hover:bg-gray-400 transition"
+                    className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50 hover:bg-gray-400 transition cursor-pointer"
                 >
                     이전
                 </button>
@@ -249,7 +249,7 @@ export default function Page() {
                 <button
                     disabled={page + 1 >= totalPages}
                     onClick={() => setPage(page + 1)}
-                    className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50 hover:bg-gray-400 transition"
+                    className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50 hover:bg-gray-400 transition cursor-pointer"
                 >
                     다음
                 </button>

@@ -93,7 +93,7 @@ function CommentInfo({ commentState }: { commentState: ReturnType<typeof useComm
       <div className="flex gap-3 pt-4">
         <button
           onClick={deleteComment}
-          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
+          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition cursor-pointer"
         >
           삭제
         </button>
