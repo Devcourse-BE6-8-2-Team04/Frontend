@@ -10,17 +10,11 @@ interface CardProps {
 export default function Card({
   children,
   className = "",
-  opacity = 100,
 }: CardProps) {
-  const cardOpacity = `bg-white/[${
-    Math.min(Math.max(opacity, 0), 100)
-  }]`; // 0~100만 허용
-
   return (
     <div
       className={clsx(
         "rounded-xl shadow-md transition-all",
-        cardOpacity,
         className
       )}
     >
@@ -28,3 +22,4 @@ export default function Card({
     </div>
   );
 }
+
