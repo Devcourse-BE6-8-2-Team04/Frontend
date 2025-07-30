@@ -1,18 +1,19 @@
 export function useClothDetailData() {
-  // 나중에 API 호출로 바꾸기 전 임시 데이터
   const weatherData = {
     city: "수원시",
-    condition: "화창함",
-    currentTemp: "18",
-    maxTemp: "18",
-    minTemp: "11",
+    condition: "맑음",
+    currentTemp: "23",
+    maxTemp: "26",
+    minTemp: "18",
   };
 
   const clothingItems = [
-    { src: "", alt: "Light gray sweatshirt", className: "w-[121px] h-[141px] object-cover" },
-    { src: "", alt: "Black pants", className: "w-[100px] h-[132px] object-cover" },
-    { src: "", alt: "Denim jacket", className: "w-[120px] h-[120px] object-cover" },
-    { src: "", alt: "White sneakers", className: "w-[86px] h-[60px]" },
+    { clothName: "셔츠", imageUrl: "/shirt.png", category: "OUTDOOR" },
+    { clothName: "바지", imageUrl: "/pants.png", category: "OUTDOOR" },
+    { clothName: "코트", imageUrl: "/coat.png", category: "DATE_LOOK" },
+    { clothName: "청바지", imageUrl: "/jeans.png", category: "DATE_LOOK" },
+    { clothName: "자켓", imageUrl: "/jacket.png", category: "FORMAL_OFFICE" },
+    { clothName: "구두", imageUrl: "/shoes.png", category: "FORMAL_OFFICE" },
   ];
 
   return { weatherData, clothingItems };
