@@ -5,6 +5,7 @@ import type { components } from "@/lib/backend/apiV1/schema";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/backend/client";
 import Link from "next/link";
+import PasswordModal from "./PasswordModal";
 
 type CommentDto = components["schemas"]["CommentDto"];
 
@@ -34,15 +35,46 @@ function useComment(id: number) {
 
 function CommentInfo({ commentState }: { commentState: ReturnType<typeof useComment> }) {
   const router = useRouter();
-  const { id, comment, deleteComment: _deleteComment } = commentState;
+  const { id, comment, deleteComment } = commentState;
+  const [showPwModal, setShowPwModal] = useState<"delete" | "edit" | null>(null);
 
   if (comment == null) {
     return <div className="text-gray-500 text-center mt-10">로딩중...</div>;
   }
 
-  const deleteComment = () => {
-    if (!confirm(`${comment.id}번 글을 정말 삭제하시겠습니까?`)) return;
-    _deleteComment(() => router.back());
+  const verifyPassword = async (password: string) => {
+    try {
+      const res = await apiFetch(`/api/v1/comments/${id}/verify-password`, {
+        method: "POST",
+        body: JSON.stringify({ password }),
+      }).catch((error) => {
+        alert(`${error.resultCode} : ${error.msg}`);
+      });
+  
+      if (!res.data) {
+        alert("비밀번호가 일치하지 않습니다.");
+        return false;
+      }
+
+      return true;
+    } catch (err) {
+      console.error("비밀번호 검증 중 오류 발생:", err);
+      alert("비밀번호 검증 중 오류가 발생했습니다.");
+      return false;
+    }
+  };
+
+  const handleDelete = async (password: string) => {
+    if(await verifyPassword(password)) {
+      if (!confirm(`${comment.id}번 글을 정말 삭제하시겠습니까?`)) return;
+      deleteComment(() => router.back());
+    }
+  };
+
+  const handleEdit = async (password: string) => {
+    if(await verifyPassword(password)) {
+      // router.push(`/comments/edit/${id}`);
+    }
   };
 
   return (
@@ -92,18 +124,28 @@ function CommentInfo({ commentState }: { commentState: ReturnType<typeof useComm
       {/* Action Buttons */}
       <div className="flex gap-3 pt-4">
         <button
-          onClick={deleteComment}
+          onClick={() => setShowPwModal("delete")}
           className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition cursor-pointer"
         >
           삭제
         </button>
-        <Link
-          href={`/comments/edit/${id}`}
-          className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
+        <button
+          onClick={() => setShowPwModal("edit")}
+          className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition cursor-pointer"
         >
           수정
-        </Link>
+        </button>
       </div>
+
+      {showPwModal && (
+      <PasswordModal
+        onClose={() => setShowPwModal(null)}
+        onVerify={(pw) => {
+          showPwModal === "delete" ? handleDelete(pw) : handleEdit(pw);
+          setShowPwModal(null);
+        }}
+      />
+    )}
     </div>
   );
 }
