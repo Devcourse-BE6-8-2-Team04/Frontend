@@ -1,5 +1,5 @@
-import WeeklyForecastSwiper from "@/components/WeeklyForecastSwiper";
+import PullToRevealSearch from "@/components/PullToRevealSearch";
 
 export default function HomePage() {
-  return <WeeklyForecastSwiper />;
+  return <PullToRevealSearch />;
 }
