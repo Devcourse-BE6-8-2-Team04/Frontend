@@ -188,7 +188,7 @@ export default function Page() {
                 )}
             </div>
 
-            {(filters.location || filters.feelsLikeTemperature || filters.month) && (
+            {(filters.location || filters.feelsLikeTemperature !== undefined || filters.month !== undefined) && (
                 <div className="text-sm text-gray-600 mb-4"> 검색 결과: 총 {totalElements}건 </div>
             )}
 
