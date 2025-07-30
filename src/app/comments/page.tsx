@@ -16,7 +16,7 @@ interface SearchFilters {
 }
 
 export default function Page() {
-    const [comments, setComments] = useState<CommentDto[]>([]);
+    const [comments, setComments] = useState<CommentDto[] | null>(null);
     const [showModal, setShowModal] = useState(false);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
@@ -104,6 +104,10 @@ export default function Page() {
         setShowModal(false);
     };
 
+    if(comments === null) {
+        return <div className="min-h-[10rem] flex justify-center items-center text-gray-500">로딩 중...</div>
+    }
+
     return (
         <div className="min-h-screen bg-gray-100 p-8">
             <div className="flex justify-between items-center mb-6">
@@ -184,6 +188,9 @@ export default function Page() {
                 )}
             </div>
 
+            {(filters.location || filters.feelsLikeTemperature || filters.month) && (
+                <div className="text-sm text-gray-600 mb-4"> 검색 결과: 총 {totalElements}건 </div>
+            )}
 
             {/* 코멘트 목록 */}
             {comments.length == 0 && <div>글이 없습니다.</div>}
@@ -192,7 +199,7 @@ export default function Page() {
                     <thead>
                         <tr className="bg-gray-200 text-gray-800 text-left text-sm uppercase tracking-wider">
                             <th className="px-4 py-3 text-center">번호</th>
-                            <th className="px-4 py-3">내용</th>
+                            <th className="px-4 py-3">제목</th>
                             <th className="px-4 py-3">이메일</th>
                             <th className="px-4 py-3">작성일</th>
                         </tr>
@@ -211,7 +218,7 @@ export default function Page() {
                                         href={`/comments/${comment.id}`}
                                         className="text-gray-600 hover:underline font-medium"
                                     >
-                                        {comment.sentence}
+                                        {comment.title}
                                     </Link>
                                 </td>
                                 <td className="px-4 py-3 text-sm text-gray-700 truncate max-w-xs">
@@ -228,19 +235,21 @@ export default function Page() {
                 </table>
             )}
 
-            <div className="mt-6 flex justify-center space-x-4">
+            <div className="mt-8 flex justify-center items-center space-x-6">
                 <button
                     disabled={page === 0}
                     onClick={() => setPage(page - 1)}
-                    className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 cursor-pointer"
+                    className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50 hover:bg-gray-400 transition"
                 >
                     이전
                 </button>
-                <span className="text-black">{page + 1} / {totalPages}</span>
+                <span className="text-gray-700 font-medium">
+                    {page + 1} / {totalPages}
+                </span>
                 <button
                     disabled={page + 1 >= totalPages}
                     onClick={() => setPage(page + 1)}
-                    className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 cursor-pointer"
+                    className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50 hover:bg-gray-400 transition"
                 >
                     다음
                 </button>

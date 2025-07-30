@@ -17,7 +17,7 @@ function useComment(id: number) {
       .catch((error) => {
         alert(`${error.resultCode} : ${error.msg}`);
       });
-  }, []);
+  }, [id]);
 
   const deleteComment = (onSuccess: () => void) => {
     apiFetch(`/api/v1/comments/${id}`, {
@@ -42,49 +42,54 @@ function CommentInfo({ commentState }: { commentState: ReturnType<typeof useComm
 
   const deleteComment = () => {
     if (!confirm(`${comment.id}번 글을 정말 삭제하시겠습니까?`)) return;
-    _deleteComment(() => router.replace("/comments"));
+    _deleteComment(() => router.back());
   };
 
   return (
     <div className="bg-white shadow-md rounded-xl p-6 space-y-4">
-      <div>
-        <div className="text-lg font-semibold text-gray-800">{comment.email}</div>
-        <span className="text-sm text-gray-600 font-medium">{comment.weatherInfoDto.location}</span>
-        <span className="text-sm text-gray-600 font-medium"> · </span>
-        <span className="text-sm text-gray-600 font-medium">{comment.weatherInfoDto.date}</span>
+      {/* Title */}
+      <div className="text-2xl font-bold text-gray-900 break-keep leading-snug">
+        {comment.title}
       </div>
+
+      {/* Metadata: email / location / date */}
+      <p className="flex justify-between text-sm text-gray-600 mt-2 min-w-0">
+        <span className="truncate">{comment.weatherInfoDto.location} · {comment.weatherInfoDto.date}</span>
+        <span className="text-right truncate">{comment.email}</span>
+      </p>
       
-      <div className="whitespace-pre-line text-gray-700 border p-4 rounded-md bg-gray-50 min-h-[6rem]">
+      {/* Content */}
+      <div className="whitespace-pre-line text-gray-700 border p-4 rounded-md bg-gray-50 min-h-[10rem]">
         {comment.sentence}
       </div>
 
+      {/* Tags */}
       {comment.tagString && (
         <div className="flex flex-wrap gap-2">
             {comment.tagString
                 .split("#")
                 .filter((tag) => tag.trim() !== "")
                 .map((tag, idx) => (
-                    <span
-                    key={idx}
-                    className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full border border-blue-300"
-                    >
-                    #{tag}
+                    <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full border border-blue-300">
+                      #{tag}
                     </span>
             ))}
         </div>
       )}
 
-
+      {/* Image */}
       {comment.imageUrl && (
-        <div>
+        <div className="relative w-full overflow-hidden">
           <img
             src={comment.imageUrl}
             alt="댓글 이미지"
-            className="max-w-full h-auto rounded-md border"
+            className="w-full h-auto rounded-md border object-contain"
+            loading="lazy"
           />
         </div>
       )}
 
+      {/* Action Buttons */}
       <div className="flex gap-3 pt-4">
         <button
           onClick={deleteComment}
