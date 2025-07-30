@@ -47,14 +47,14 @@ function CommentInfo({ commentState }: { commentState: ReturnType<typeof useComm
 
   return (
     <div className="bg-white shadow-md rounded-xl p-6 space-y-4">
-      <div className="text-lg font-semibold text-gray-800">{comment.email}</div>
-      
-      <div className="text-sm text-gray-600">
-        <span>🌍 지역: <span className="font-medium">{comment.weatherInfoDto.location}</span></span>
-        <span className="ml-10">📆 날짜: <span className="font-medium">{comment.weatherInfoDto.date}</span></span>
+      <div>
+        <div className="text-lg font-semibold text-gray-800">{comment.email}</div>
+        <span className="text-sm text-gray-600 font-medium">{comment.weatherInfoDto.location}</span>
+        <span className="text-sm text-gray-600 font-medium"> · </span>
+        <span className="text-sm text-gray-600 font-medium">{comment.weatherInfoDto.date}</span>
       </div>
       
-      <div className="whitespace-pre-line text-gray-700 border p-4 rounded-md bg-gray-50">
+      <div className="whitespace-pre-line text-gray-700 border p-4 rounded-md bg-gray-50 min-h-[6rem]">
         {comment.sentence}
       </div>
 
@@ -113,7 +113,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-3xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">📝 코멘트 상세페이지</h1>
+        <Link href={`/comments`} className="text-3xl font-bold text-gray-800">WearLog</Link>
         </div>
 
         <CommentInfo commentState={commentState} />
