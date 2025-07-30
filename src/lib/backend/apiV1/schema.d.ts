@@ -44,6 +44,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/weathers/location": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 위치별 날씨 조회
+         * @description 지명과 위도와 경도를 이용하여 해당 위치의 날씨 정보를 조회합니다.
+         */
+        get: operations["getWeatherByLocation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/geos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 도시 이름으로 지역 정보 조회
+         * @description 도시 이름에 해당하는 지역 정보를 반환합니다.
+         */
+        get: operations["getGeoLocations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/comments": {
         parameters: {
             query?: never;
@@ -53,7 +93,7 @@ export interface paths {
         };
         /**
          * 커멘트 다건 조회
-         * @description location, date, feelsLikeTemperature 파라미터를 사용하여 커멘트 목록을 조회합니다.
+         * @description 필터링된 커멘트 목록을 조회합니다.
          */
         get: operations["getComments"];
         put?: never;
@@ -100,6 +140,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/cloth/details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 날씨 기반 옷 정보 조회
+         * @description 위도와 경도를 이용하여 날씨 정보를 조회하고, 해당 날씨에 적합한 옷 정보를 반환합니다.
+         */
+        get: operations["getClothDetails"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -135,6 +195,15 @@ export interface components {
             /** Format: date */
             date: string;
         };
+        GeoLocationDto: {
+            name: string;
+            country: string;
+            /** Format: double */
+            lat: number;
+            /** Format: double */
+            lon: number;
+            localName?: string;
+        };
         Pageable: {
             /** Format: int32 */
             page?: number;
@@ -147,6 +216,7 @@ export interface components {
             id: number;
             email: string;
             imageUrl?: string;
+            title: string;
             sentence: string;
             tagString: string;
             weatherInfoDto: components["schemas"]["WeatherInfoDto"];
@@ -175,9 +245,9 @@ export interface components {
             sort?: components["schemas"]["SortObject"];
             paged?: boolean;
             /** Format: int32 */
-            pageNumber?: number;
-            /** Format: int32 */
             pageSize?: number;
+            /** Format: int32 */
+            pageNumber?: number;
             unpaged?: boolean;
         };
         SortObject: {
@@ -200,6 +270,52 @@ export interface components {
             extraClothes?: {
                 [key: string]: components["schemas"]["Clothing"][];
             };
+        };
+        CategoryClothDto: {
+            clothName?: string;
+            imageUrl?: string;
+            /** @enum {string} */
+            category?: "CASUAL_DAILY" | "FORMAL_OFFICE" | "OUTDOOR" | "DATE_LOOK" | "EXTRA";
+        };
+        WeatherClothResponseDto: {
+            weatherInfo?: components["schemas"]["WeatherInfo"];
+            clothList?: components["schemas"]["CategoryClothDto"][];
+        };
+        WeatherInfo: {
+            /** Format: int32 */
+            id?: number;
+            /** @enum {string} */
+            weather?: "THUNDERSTORM_LIGHT_RAIN" | "THUNDERSTORM_RAIN" | "THUNDERSTORM_HEAVY_RAIN" | "LIGHT_THUNDERSTORM" | "THUNDERSTORM" | "HEAVY_THUNDERSTORM" | "RAGGED_THUNDERSTORM" | "THUNDERSTORM_LIGHT_DRIZZLE" | "THUNDERSTORM_DRIZZLE" | "THUNDERSTORM_HEAVY_DRIZZLE" | "LIGHT_DRIZZLE" | "DRIZZLE" | "HEAVY_DRIZZLE" | "LIGHT_DRIZZLE_RAIN" | "DRIZZLE_RAIN" | "HEAVY_DRIZZLE_RAIN" | "SHOWER_RAIN_AND_DRIZZLE" | "HEAVY_SHOWER_RAIN_AND_DRIZZLE" | "SHOWER_DRIZZLE" | "LIGHT_RAIN" | "MODERATE_RAIN" | "HEAVY_RAIN" | "VERY_HEAVY_RAIN" | "EXTREME_RAIN" | "FREEZING_RAIN" | "LIGHT_SHOWER_RAIN" | "SHOWER_RAIN" | "HEAVY_SHOWER_RAIN" | "RAGGED_SHOWER_RAIN" | "LIGHT_SNOW" | "SNOW" | "HEAVY_SNOW" | "SLEET" | "LIGHT_SHOWER_SLEET" | "SHOWER_SLEET" | "LIGHT_RAIN_AND_SNOW" | "RAIN_AND_SNOW" | "LIGHT_SHOWER_SNOW" | "SHOWER_SNOW" | "HEAVY_SHOWER_SNOW" | "MIST" | "SMOKE" | "HAZE" | "SAND_DUST_WHIRLS" | "FOG" | "SAND" | "DUST" | "VOLCANIC_ASH" | "SQUALLS" | "TORNADO" | "CLEAR_SKY" | "FEW_CLOUDS" | "SCATTERED_CLOUDS" | "BROKEN_CLOUDS" | "OVERCAST_CLOUDS";
+            description?: string;
+            /** Format: double */
+            dailyTemperatureGap?: number;
+            /** Format: double */
+            feelsLikeTemperature?: number;
+            /** Format: double */
+            maxTemperature?: number;
+            /** Format: double */
+            minTemperature?: number;
+            /** Format: double */
+            pop?: number;
+            /** Format: double */
+            rain?: number;
+            /** Format: double */
+            snow?: number;
+            /** Format: int32 */
+            humidity?: number;
+            /** Format: double */
+            windSpeed?: number;
+            /** Format: int32 */
+            windDeg?: number;
+            /** Format: double */
+            uvi?: number;
+            location?: string;
+            /** Format: date */
+            date?: string;
+            /** Format: date-time */
+            createDate?: string;
+            /** Format: date-time */
+            modifyDate?: string;
         };
     };
     responses: never;
@@ -228,7 +344,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json;charset=UTF-8": components["schemas"]["WeatherInfoDto"][];
+                    "*/*": components["schemas"]["WeatherInfoDto"][];
                 };
             };
         };
@@ -253,7 +369,55 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json;charset=UTF-8": components["schemas"]["WeatherInfoDto"];
+                    "*/*": components["schemas"]["WeatherInfoDto"];
+                };
+            };
+        };
+    };
+    getWeatherByLocation: {
+        parameters: {
+            query: {
+                location: string;
+                lat: number;
+                lon: number;
+                start: string;
+                end: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["WeatherInfoDto"][];
+                };
+            };
+        };
+    };
+    getGeoLocations: {
+        parameters: {
+            query: {
+                location: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["GeoLocationDto"][];
                 };
             };
         };
@@ -264,6 +428,7 @@ export interface operations {
                 location?: string;
                 date?: string;
                 feelsLikeTemperature?: number;
+                month?: number;
                 pageable: components["schemas"]["Pageable"];
             };
             header?: never;
@@ -278,7 +443,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json;charset=UTF-8": components["schemas"]["PageCommentDto"];
+                    "*/*": components["schemas"]["PageCommentDto"];
                 };
             };
         };
@@ -300,7 +465,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json;charset=UTF-8": components["schemas"]["CommentDto"];
+                    "*/*": components["schemas"]["CommentDto"];
                 };
             };
         };
@@ -322,7 +487,38 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json;charset=UTF-8": components["schemas"]["OutfitResponse"];
+                    "*/*": components["schemas"]["OutfitResponse"];
+                };
+            };
+        };
+    };
+    getClothDetails: {
+        parameters: {
+            query: {
+                /**
+                 * @description 위도
+                 * @example 37.5
+                 */
+                latitude: number;
+                /**
+                 * @description 경도
+                 * @example 127
+                 */
+                longitude: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["WeatherClothResponseDto"];
                 };
             };
         };
