@@ -1,7 +1,7 @@
 "use client";
 
 import { WeatherInfoDto } from "@/lib/backend/apiV1/weatherService";
-import { weatherThemeMap } from "@/utils/weatherThemeMap";
+import { weatherThemeMap } from "@/features/weather/utils/weatherThemeMap";
 import WeatherCharacter from "./WeatherCharacter";
 import WeatherDetailCards from "./WeatherDetailCards";
 import { Navigation } from "lucide-react";

@@ -6,7 +6,7 @@ import { Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-import { weatherThemeMap } from "@/utils/weatherThemeMap";
+import { weatherThemeMap } from "@/features/weather/utils/weatherThemeMap";
 import WeatherTodayCard from "./WeatherTodayCard";
 import {
   getWeeklyWeather,

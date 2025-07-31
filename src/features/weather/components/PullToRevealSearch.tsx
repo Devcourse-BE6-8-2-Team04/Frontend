@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Search, X, Navigation } from "lucide-react";
-import WeeklyForecastSwiper from "@/components/WeeklyForecastSwiper";
+import WeeklyForecastSwiper from "@/features/weather/components/WeeklyForecastSwiper";
 import {
   getGeoLocations,
   getWeeklyWeather,
