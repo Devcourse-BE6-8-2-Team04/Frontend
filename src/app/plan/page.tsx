@@ -75,7 +75,6 @@ export default function Plan() {
   const [locationName, setLocationName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [warningMessage, setWarningMessage] = useState('');
 
   const scrollRefs = useRef<{
     [key: string]: React.RefObject<HTMLDivElement>
@@ -85,7 +84,6 @@ export default function Plan() {
   }>({});
 
   const handleConfirm = async () => {
-    setWarningMessage('');
     setError(null);
     setClothData(null);
     setWeatherData(null);
@@ -93,14 +91,6 @@ export default function Plan() {
 
     if (!destination || !checkInDate || !checkOutDate) {
       setError('모든 필드를 채워주세요.');
-      return;
-    }
-
-    const depDate = new Date(checkInDate);
-    const arrDate = new Date(checkOutDate);
-
-    if (arrDate < depDate) {
-      setWarningMessage('체크아웃 날짜는 체크인 날짜보다 빠를 수 없습니다.');
       return;
     }
 
@@ -302,40 +292,40 @@ export default function Plan() {
 
   return (
       <div className="min-h-screen flex flex-col items-center bg-gray-50 p-4">
-        <div className="w-full max-w-5xl mt-10 p-6 bg-white rounded-lg shadow-lg flex items-end gap-4">
-          <div className="flex flex-col flex-grow">
+        <div className="w-full max-w-5xl mt-10 p-6 bg-white rounded-lg shadow-lg flex flex-col md:flex-row md:items-end gap-4">
+          <div className="flex flex-col flex-grow w-full">
             <label htmlFor="destination" className="text-base font-semibold text-gray-700 mb-2">여행지</label>
             <input
                 type="text"
                 id="destination"
                 placeholder="어디로 떠나시나요?"
-                className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                className="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
             />
           </div>
-          <div className="flex flex-col flex-grow">
+          <div className="flex flex-col flex-grow w-full">
             <label htmlFor="checkInDate" className="text-base font-semibold text-gray-700 mb-2">체크인</label>
             <input
                 type="date"
                 id="checkInDate"
-                className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                className="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                 value={checkInDate}
                 onChange={(e) => setCheckInDate(e.target.value)}
             />
           </div>
-          <div className="flex flex-col flex-grow">
+          <div className="flex flex-col flex-grow w-full">
             <label htmlFor="checkOutDate" className="text-base font-semibold text-gray-700 mb-2">체크아웃</label>
             <input
                 type="date"
                 id="checkOutDate"
-                className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                className="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                 value={checkOutDate}
                 onChange={(e) => setCheckOutDate(e.target.value)}
             />
           </div>
           <button
-              className="px-6 py-2 bg-blue-600 text-white font-bold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-shrink-0"
+              className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white font-bold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-shrink-0"
               onClick={handleConfirm}
               disabled={isLoading}
           >
@@ -347,19 +337,6 @@ export default function Plan() {
           {renderContent()}
         </div>
 
-        {warningMessage && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40" onClick={() => setWarningMessage('')}>
-              <div className="bg-white p-6 rounded-lg shadow-lg text-center z-50" onClick={(e) => e.stopPropagation()}>
-                <p className="text-lg font-semibold text-red-600 mb-4">{warningMessage}</p>
-                <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    onClick={() => setWarningMessage('')}
-                >
-                  확인
-                </button>
-              </div>
-            </div>
-        )}
-      </div>
+        </div>
   );
 }
