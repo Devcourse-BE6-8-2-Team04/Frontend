@@ -1,6 +1,6 @@
 "use client";
 
-import { WeatherInfo } from "@/types/weather";
+import { WeatherInfoDto } from "@/lib/backend/apiV1/weatherService";
 import WeatherInfoCard from "./WeatherInfoCard";
 import { Wind, Droplet, Gauge, Umbrella } from "lucide-react";
 
@@ -92,7 +92,7 @@ function getHumidityInfo(humidity: number) {
 export default function WeatherDetailCards({
   weather,
 }: {
-  weather: WeatherInfo;
+  weather: WeatherInfoDto;
 }) {
   // 날씨 정보에서 필요한 데이터 추출
   const { uvi, humidity, pop, rain, snow, windDeg, windSpeed } = weather;

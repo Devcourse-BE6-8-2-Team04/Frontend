@@ -1,13 +1,17 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-import { dummyForecast } from "@/utils/dummyForecast";
 import { weatherThemeMap } from "@/utils/weatherThemeMap";
 import WeatherTodayCard from "./WeatherTodayCard";
+import {
+  getWeeklyWeather,
+  type WeatherInfoDto,
+} from "@/lib/backend/apiV1/weatherService";
 
 /**
  * 주간 날씨 예보를 스와이프로 볼 수 있는 컴포넌트
@@ -18,8 +22,134 @@ import WeatherTodayCard from "./WeatherTodayCard";
  * - 날씨 테마에 따른 배경 이미지 적용
  * - 페이지네이션 도트로 현재 슬라이드 표시
  * - 전체 화면 높이 기반 레이아웃
+ * - 실제 API를 통한 날씨 데이터 조회
+ * - 사용자 현재 위치 기반 날씨 정보 요청
  */
 export default function WeeklyForecastSwiper() {
+  // 날씨 데이터 상태
+  const [weatherData, setWeatherData] = useState<WeatherInfoDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<{
+    lat: number;
+    lon: number;
+  } | null>(null);
+
+  // 사용자 현재 위치 가져오기 (나중에 수정 예정)
+  const getUserLocation = (): Promise<{ lat: number; lon: number }> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        // 위치 정보를 지원하지 않는 경우 기본값 반환
+        resolve({ lat: 37.5665, lon: 126.978 }); // 서울 좌표
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          resolve({ lat: latitude, lon: longitude });
+        },
+        (error) => {
+          console.warn("위치 정보를 가져올 수 없습니다:", error);
+          // 에러 시 기본값 반환
+          resolve({ lat: 37.5665, lon: 126.978 }); // 서울 좌표
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000, // 5분
+        }
+      );
+    });
+  };
+
+  // 컴포넌트 마운트 시 날씨 데이터 로드
+  useEffect(() => {
+    const loadWeatherData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // 사용자 현재 위치 가져오기
+        const location = await getUserLocation();
+        setCurrentLocation(location);
+
+        const data = await getWeeklyWeather(location.lat, location.lon);
+        setWeatherData(data);
+      } catch (err) {
+        console.error("날씨 데이터 로드 실패:", err);
+        setError("날씨 정보를 불러올 수 없습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadWeatherData();
+  }, []);
+
+  // 날씨 데이터 업데이트 이벤트 리스너
+  useEffect(() => {
+    const handleWeatherUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent<WeatherInfoDto[]>;
+      try {
+        setLoading(true);
+        setError(null);
+        setWeatherData(customEvent.detail);
+      } catch (err) {
+        console.error("날씨 데이터 업데이트 실패:", err);
+        setError("날씨 정보를 불러올 수 없습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    window.addEventListener("weather:update", handleWeatherUpdate);
+
+    return () => {
+      window.removeEventListener("weather:update", handleWeatherUpdate);
+    };
+  }, []);
+
+  // 로딩 상태 표시
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>날씨 정보를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태 표시
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white">
+        <div className="text-center">
+          <p className="text-red-300 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
+          >
+            다시 시도
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 데이터가 없는 경우
+  if (weatherData.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white">
+        <div className="text-center">
+          <p>날씨 정보가 없습니다.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-screen min-h-screen overflow-y-auto">
       {/* 페이지네이션 도트 (상단 고정 위치) */}
@@ -38,7 +168,7 @@ export default function WeeklyForecastSwiper() {
         className="w-screen min-h-screen"
       >
         {/* 각 날짜별 날씨 슬라이드 */}
-        {dummyForecast.map((day) => {
+        {weatherData.map((day) => {
           // 날씨 상태에 따른 테마 정보 가져오기
           const theme = weatherThemeMap[day.weather] ?? weatherThemeMap.DEFAULT;
 

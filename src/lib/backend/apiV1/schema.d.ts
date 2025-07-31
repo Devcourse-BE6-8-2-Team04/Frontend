@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/api/v1/comments/{id}/verify-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 커멘트 비밀번호 검증
+         * @description 커멘트의 비밀번호를 검증합니다.
+         */
+        post: operations["verifyPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/weathers": {
         parameters: {
             query?: never;
@@ -118,7 +138,11 @@ export interface paths {
         get: operations["getComment"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * 커멘트 삭제
+         * @description 커멘트를 삭제합니다.
+         */
+        delete: operations["deleteComment"];
         options?: never;
         head?: never;
         patch?: never;
@@ -164,11 +188,21 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        verifyPasswordReqBody: {
+            password?: string;
+        };
+        RsDataBoolean: {
+            resultCode?: string;
+            msg?: string;
+            data?: boolean;
+        };
         WeatherInfoDto: {
             /** Format: int32 */
             id: number;
             weather: string;
-            description?: string;
+            /** Format: int32 */
+            weatherCode?: number;
+            weatherDescription?: string;
             /** Format: double */
             dailyTemperatureGap: number;
             /** Format: double */
@@ -222,32 +256,32 @@ export interface components {
             weatherInfoDto: components["schemas"]["WeatherInfoDto"];
         };
         PageCommentDto: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["CommentDto"][];
             /** Format: int32 */
             number?: number;
             sort?: components["schemas"]["SortObject"];
-            first?: boolean;
-            last?: boolean;
             /** Format: int32 */
             numberOfElements?: number;
             pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             empty?: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset?: number;
             sort?: components["schemas"]["SortObject"];
-            paged?: boolean;
-            /** Format: int32 */
-            pageSize?: number;
             /** Format: int32 */
             pageNumber?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            paged?: boolean;
             unpaged?: boolean;
         };
         SortObject: {
@@ -256,11 +290,14 @@ export interface components {
             unsorted?: boolean;
         };
         TripSchedule: {
-            place: string;
             /** Format: date */
             start?: string;
             /** Format: date */
             end?: string;
+            /** Format: double */
+            lat?: number;
+            /** Format: double */
+            lon?: number;
         };
         Clothing: unknown;
         OutfitResponse: {
@@ -277,45 +314,23 @@ export interface components {
             /** @enum {string} */
             category?: "CASUAL_DAILY" | "FORMAL_OFFICE" | "OUTDOOR" | "DATE_LOOK" | "EXTRA";
         };
-        WeatherClothResponseDto: {
-            weatherInfo?: components["schemas"]["WeatherInfo"];
-            clothList?: components["schemas"]["CategoryClothDto"][];
-        };
-        WeatherInfo: {
+        ExtraClothDto: {
             /** Format: int32 */
             id?: number;
+            clothName?: string;
+            imageUrl?: string;
             /** @enum {string} */
-            weather?: "THUNDERSTORM_LIGHT_RAIN" | "THUNDERSTORM_RAIN" | "THUNDERSTORM_HEAVY_RAIN" | "LIGHT_THUNDERSTORM" | "THUNDERSTORM" | "HEAVY_THUNDERSTORM" | "RAGGED_THUNDERSTORM" | "THUNDERSTORM_LIGHT_DRIZZLE" | "THUNDERSTORM_DRIZZLE" | "THUNDERSTORM_HEAVY_DRIZZLE" | "LIGHT_DRIZZLE" | "DRIZZLE" | "HEAVY_DRIZZLE" | "LIGHT_DRIZZLE_RAIN" | "DRIZZLE_RAIN" | "HEAVY_DRIZZLE_RAIN" | "SHOWER_RAIN_AND_DRIZZLE" | "HEAVY_SHOWER_RAIN_AND_DRIZZLE" | "SHOWER_DRIZZLE" | "LIGHT_RAIN" | "MODERATE_RAIN" | "HEAVY_RAIN" | "VERY_HEAVY_RAIN" | "EXTREME_RAIN" | "FREEZING_RAIN" | "LIGHT_SHOWER_RAIN" | "SHOWER_RAIN" | "HEAVY_SHOWER_RAIN" | "RAGGED_SHOWER_RAIN" | "LIGHT_SNOW" | "SNOW" | "HEAVY_SNOW" | "SLEET" | "LIGHT_SHOWER_SLEET" | "SHOWER_SLEET" | "LIGHT_RAIN_AND_SNOW" | "RAIN_AND_SNOW" | "LIGHT_SHOWER_SNOW" | "SHOWER_SNOW" | "HEAVY_SHOWER_SNOW" | "MIST" | "SMOKE" | "HAZE" | "SAND_DUST_WHIRLS" | "FOG" | "SAND" | "DUST" | "VOLCANIC_ASH" | "SQUALLS" | "TORNADO" | "CLEAR_SKY" | "FEW_CLOUDS" | "SCATTERED_CLOUDS" | "BROKEN_CLOUDS" | "OVERCAST_CLOUDS";
-            description?: string;
-            /** Format: double */
-            dailyTemperatureGap?: number;
-            /** Format: double */
-            feelsLikeTemperature?: number;
-            /** Format: double */
-            maxTemperature?: number;
-            /** Format: double */
-            minTemperature?: number;
-            /** Format: double */
-            pop?: number;
-            /** Format: double */
-            rain?: number;
-            /** Format: double */
-            snow?: number;
-            /** Format: int32 */
-            humidity?: number;
-            /** Format: double */
-            windSpeed?: number;
-            /** Format: int32 */
-            windDeg?: number;
-            /** Format: double */
-            uvi?: number;
-            location?: string;
-            /** Format: date */
-            date?: string;
-            /** Format: date-time */
-            createDate?: string;
-            /** Format: date-time */
-            modifyDate?: string;
+            weather?: "THUNDERSTORM_LIGHT_RAIN" | "THUNDERSTORM_RAIN" | "THUNDERSTORM_HEAVY_RAIN" | "LIGHT_THUNDERSTORM" | "THUNDERSTORM" | "HEAVY_THUNDERSTORM" | "RAGGED_THUNDERSTORM" | "THUNDERSTORM_LIGHT_DRIZZLE" | "THUNDERSTORM_DRIZZLE" | "THUNDERSTORM_HEAVY_DRIZZLE" | "LIGHT_DRIZZLE" | "DRIZZLE" | "HEAVY_DRIZZLE" | "LIGHT_DRIZZLE_RAIN" | "DRIZZLE_RAIN" | "HEAVY_DRIZZLE_RAIN" | "SHOWER_RAIN_AND_DRIZZLE" | "HEAVY_SHOWER_RAIN_AND_DRIZZLE" | "SHOWER_DRIZZLE" | "LIGHT_RAIN" | "MODERATE_RAIN" | "HEAVY_RAIN" | "VERY_HEAVY_RAIN" | "EXTREME_RAIN" | "FREEZING_RAIN" | "LIGHT_SHOWER_RAIN" | "SHOWER_RAIN" | "HEAVY_SHOWER_RAIN" | "RAGGED_SHOWER_RAIN" | "LIGHT_SNOW" | "SNOW" | "HEAVY_SNOW" | "SLEET" | "LIGHT_SHOWER_SLEET" | "SHOWER_SLEET" | "LIGHT_RAIN_AND_SNOW" | "RAIN_AND_SNOW" | "LIGHT_SHOWER_SNOW" | "SHOWER_SNOW" | "HEAVY_SHOWER_SNOW" | "MIST" | "SMOKE" | "HAZE" | "SAND_DUST_WHIRLS" | "FOG" | "SAND" | "DUST" | "VOLCANIC_ASH" | "SQUALLS" | "TORNADO" | "CLEAR_SKY" | "FEW_CLOUDS" | "SCATTERED_CLOUDS" | "BROKEN_CLOUDS" | "OVERCAST_CLOUDS" | "HEAT_WAVE";
+        };
+        WeatherClothResponseDto: {
+            weatherInfo?: components["schemas"]["WeatherInfoDto"];
+            clothList?: components["schemas"]["CategoryClothDto"][];
+            extraCloth?: components["schemas"]["ExtraClothDto"][];
+        };
+        RsDataCommentDto: {
+            resultCode?: string;
+            msg?: string;
+            data?: components["schemas"]["CommentDto"];
         };
     };
     responses: never;
@@ -326,6 +341,32 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    verifyPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["verifyPasswordReqBody"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataBoolean"];
+                };
+            };
+        };
+    };
     getWeeklyWeather: {
         parameters: {
             query: {
@@ -466,6 +507,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CommentDto"];
+                };
+            };
+        };
+    };
+    deleteComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RsDataCommentDto"];
                 };
             };
         };

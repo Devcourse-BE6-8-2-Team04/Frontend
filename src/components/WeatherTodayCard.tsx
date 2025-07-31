@@ -1,6 +1,6 @@
 "use client";
 
-import { WeatherInfo } from "@/types/weather";
+import { WeatherInfoDto } from "@/lib/backend/apiV1/weatherService";
 import { weatherThemeMap } from "@/utils/weatherThemeMap";
 import WeatherCharacter from "./WeatherCharacter";
 import WeatherDetailCards from "./WeatherDetailCards";
@@ -19,7 +19,7 @@ import WeatherDetailCards from "./WeatherDetailCards";
 export default function WeatherTodayCard({
   weather,
 }: {
-  weather: WeatherInfo;
+  weather: WeatherInfoDto;
 }) {
   // 날씨 상태에 따른 테마 정보 가져오기 (기본값: DEFAULT)
   const theme = weatherThemeMap[weather.weather] ?? weatherThemeMap.DEFAULT;
@@ -37,14 +37,19 @@ export default function WeatherTodayCard({
           <h1 className="text-6xl font-bold mt-1">
             {Math.round(weather.feelsLikeTemperature)}°
           </h1>
-          {/* 날씨 설명 (맑음, 흐림 등) */}
-          <p className="text-base mt-2">{weather.description}</p>
+          {/* 날씨 설명 */}
+          <p className="text-base mt-2">
+            {weather.weatherDescription || "날씨 정보 없음"}
+          </p>
           {/* 최고/최저 온도 */}
           <p className="text-sm">
-            최고 {weather.maxTemperature}° / 최저 {weather.minTemperature}°
+            최고 {Math.round(weather.maxTemperature)}° / 최저{" "}
+            {Math.round(weather.minTemperature)}°
           </p>
           {/* 체감 온도 */}
-          <p className="text-sm">체감온도 {weather.feelsLikeTemperature}°</p>
+          <p className="text-sm">
+            체감 온도 {Math.round(weather.feelsLikeTemperature)}°
+          </p>
         </div>
 
         {/* 오른쪽: 날씨 캐릭터 이미지 */}
