@@ -5,7 +5,7 @@ import { Search, X, Navigation } from "lucide-react";
 import WeeklyForecastSwiper from "@/components/WeeklyForecastSwiper";
 import {
   getGeoLocations,
-  getWeatherByLocation,
+  getWeeklyWeather,
   type GeoLocationDto,
   type WeatherInfoDto,
 } from "@/lib/backend/apiV1/weatherService";
@@ -132,9 +132,12 @@ export default function PullToRevealSearch() {
   /**
    * 검색 실행 함수
    * 실제 API를 통해 지역 정보를 검색
+   *
+   * @param searchQuery - 검색할 쿼리 (기본값: 현재 query 상태)
    */
-  const handleSearch = async () => {
-    const trimmed = query.trim();
+  const handleSearch = async (searchQuery?: string) => {
+    const queryToUse = searchQuery || query;
+    const trimmed = queryToUse.trim();
     if (!trimmed) return;
 
     try {
@@ -169,18 +172,7 @@ export default function PullToRevealSearch() {
   const handleSelectResult = async (location: GeoLocationDto) => {
     try {
       // 선택된 지역의 날씨 정보 조회
-      const today = new Date().toISOString().split("T")[0];
-      const endDate = new Date();
-      endDate.setDate(endDate.getDate() + 7);
-      const endDateStr = endDate.toISOString().split("T")[0];
-
-      const weatherData = await getWeatherByLocation(
-        location.name,
-        location.lat,
-        location.lon,
-        today,
-        endDateStr
-      );
+      const weatherData = await getWeeklyWeather(location.lat, location.lon);
 
       // 날씨 정보 업데이트 이벤트 발생
       window.dispatchEvent(
@@ -231,18 +223,7 @@ export default function PullToRevealSearch() {
       setCurrentLocation(newLocation);
 
       // 현재 위치의 날씨 정보 조회
-      const today = new Date().toISOString().split("T")[0];
-      const endDate = new Date();
-      endDate.setDate(endDate.getDate() + 7);
-      const endDateStr = endDate.toISOString().split("T")[0];
-
-      const weatherData = await getWeatherByLocation(
-        `위도 ${latitude.toFixed(2)}, 경도 ${longitude.toFixed(2)}`,
-        latitude,
-        longitude,
-        today,
-        endDateStr
-      );
+      const weatherData = await getWeeklyWeather(latitude, longitude);
 
       // 날씨 정보 업데이트 이벤트 발생
       window.dispatchEvent(
@@ -312,7 +293,7 @@ export default function PullToRevealSearch() {
                 autoFocus
               />
               <button
-                onClick={handleSearch}
+                onClick={() => handleSearch()}
                 disabled={searchLoading}
                 className="text-gray-300 hover:text-white disabled:opacity-50"
               >
@@ -354,29 +335,9 @@ export default function PullToRevealSearch() {
                             className="flex items-center gap-2 text-gray-300"
                           >
                             <button
-                              onClick={async () => {
-                                try {
-                                  setSearchLoading(true);
-
-                                  // 최근 검색어로 지역 정보 검색
-                                  const results = await getGeoLocations(item);
-
-                                  if (results.length > 0) {
-                                    // 첫 번째 결과로 날씨 정보 가져오기
-                                    await handleSelectResult(results[0]);
-                                  } else {
-                                    // 검색 결과가 없으면 일반 검색으로 진행
-                                    setQuery(item);
-                                    handleSearch();
-                                  }
-                                } catch (error) {
-                                  console.error("검색 실패:", error);
-                                  // 에러 시 일반 검색으로 진행
-                                  setQuery(item);
-                                  handleSearch();
-                                } finally {
-                                  setSearchLoading(false);
-                                }
+                              onClick={() => {
+                                setQuery(item);
+                                handleSearch(item);
                               }}
                               className="hover:text-white text-base"
                             >
@@ -455,7 +416,7 @@ export default function PullToRevealSearch() {
               className="flex-1 p-1 bg-transparent text-white placeholder-gray-300 focus:outline-none text-base"
             />
             <button
-              onClick={handleSearch}
+              onClick={() => handleSearch()}
               disabled={searchLoading}
               className="text-gray-300 hover:text-white disabled:opacity-50"
             >
