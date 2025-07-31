@@ -3,6 +3,7 @@
 import { WeatherInfo } from "@/types/weather";
 import { weatherThemeMap } from "@/utils/weatherThemeMap";
 import WeatherCharacter from "./WeatherCharacter";
+import WeatherDetailCards from "./WeatherDetailCards";
 
 export default function WeatherTodayCard({
   weather,
@@ -12,13 +13,13 @@ export default function WeatherTodayCard({
   const theme = weatherThemeMap[weather.weather] ?? weatherThemeMap.DEFAULT;
 
   return (
-    <div className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] px-6 pt-6 pb-12">
-      <div className="flex justify-between items-center gap-6">
+    <div className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] px-3 pt-6 pb-12">
+      <div className="flex justify-between items-center gap-6 px-3">
         {/* 왼쪽 날씨 정보 */}
         <div className="flex flex-col gap-1">
           <p className="text-lg font-medium">{weather.location}</p>
           <p className="text-sm text-white/80">{weather.date}</p>
-          <h1 className="text-7xl font-bold mt-1">
+          <h1 className="text-6xl font-bold mt-1">
             {Math.round(weather.feelsLikeTemperature)}°
           </h1>
           <p className="text-base mt-2">{weather.description}</p>
@@ -33,6 +34,7 @@ export default function WeatherTodayCard({
           <WeatherCharacter src={theme.characterImage} />
         </div>
       </div>
+      <WeatherDetailCards weather={weather} />
     </div>
   );
 }

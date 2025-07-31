@@ -6,14 +6,18 @@ import WeeklyForecastSwiper from "@/components/WeeklyForecastSwiper";
 
 export default function PullToRevealSearch() {
   const [offset, setOffset] = useState(0);
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [canPull, setCanPull] = useState(true);
+
   const startYRef = useRef<number | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
   const [query, setQuery] = useState("");
   const [showOverlay, setShowOverlay] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // ✅ localStorage에서 최근 검색어 불러오기
   useEffect(() => {
     const saved = localStorage.getItem("recentSearches");
     if (saved) {
@@ -25,13 +29,32 @@ export default function PullToRevealSearch() {
     localStorage.setItem("recentSearches", JSON.stringify(list));
   };
 
+  const handleScroll = () => {
+    if (!contentRef.current) return;
+    const el = contentRef.current;
+    const scrollTop = el.scrollTop;
+    const hasScroll = el.scrollHeight > el.clientHeight;
+
+    // 스크롤 가능한 경우에만 최상단에서 pull 허용
+    setCanPull(!hasScroll || scrollTop <= 0);
+  };
+
   const handleTouchStart = (e: React.TouchEvent) => {
+    const scrollTop = contentRef.current?.scrollTop ?? 0;
+    const hasScroll =
+      contentRef.current &&
+      contentRef.current.scrollHeight > contentRef.current.clientHeight;
+
+    if ((hasScroll && scrollTop > 0) || !canPull) return;
+
     startYRef.current = e.touches[0].clientY;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    if (startYRef.current === null) return;
+
     const currentY = e.touches[0].clientY;
-    const startY = startYRef.current ?? 0;
+    const startY = startYRef.current;
     const diff = currentY - startY;
 
     if (diff > 0 && diff < 150) {
@@ -42,10 +65,12 @@ export default function PullToRevealSearch() {
   };
 
   const handleTouchEnd = () => {
-    if (offset >= 60) {
+    if (offset >= 50) {
       setOffset(80);
+      setIsSearchVisible(true);
     } else {
       setOffset(0);
+      setIsSearchVisible(false);
     }
     startYRef.current = null;
   };
@@ -141,6 +166,7 @@ export default function PullToRevealSearch() {
   };
 
   const closeOverlay = () => {
+    setOffset(0);
     setShowOverlay(false);
     setQuery("");
     setSearchResults([]);
@@ -148,7 +174,8 @@ export default function PullToRevealSearch() {
   };
 
   return (
-    <div className="relative h-screen overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden">
+      {/* 검색 오버레이 */}
       {showOverlay && (
         <div className="fixed inset-0 bg-black text-white z-50 overflow-y-auto">
           <div className="h-[80px] bg-gray-800 flex items-center justify-center px-4 shadow-md">
@@ -159,7 +186,7 @@ export default function PullToRevealSearch() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="flex-1 p-1 bg-transparent text-white placeholder-gray-300 focus:outline-none"
+                className="flex-1 p-1 bg-transparent text-white placeholder-gray-300 focus:outline-none text-base"
                 autoFocus
               />
               <button
@@ -186,7 +213,7 @@ export default function PullToRevealSearch() {
                     onClick={handleCurrentLocation}
                   >
                     <Navigation size={20} />
-                    <span className="text-sm">현재위치</span>
+                    <span className="text-base">현재위치</span>
                   </div>
 
                   {recentSearches.length > 0 && (
@@ -210,7 +237,7 @@ export default function PullToRevealSearch() {
                                   `${item}역`,
                                 ]);
                               }}
-                              className="hover:text-white"
+                              className="hover:text-white text-base"
                             >
                               {item}
                             </button>
@@ -235,7 +262,7 @@ export default function PullToRevealSearch() {
                     {searchResults.map((item) => (
                       <li
                         key={item}
-                        className="cursor-pointer hover:text-white text-gray-300"
+                        className="cursor-pointer hover:text-white text-gray-300 text-base"
                         onClick={() => handleSelectResult(item)}
                       >
                         {item}
@@ -249,6 +276,7 @@ export default function PullToRevealSearch() {
         </div>
       )}
 
+      {/* 검색창 당기기 UI */}
       <div
         className="absolute top-[-80px] left-0 w-full transition-transform duration-200"
         style={{ transform: `translateY(${offset}px)` }}
@@ -256,7 +284,7 @@ export default function PullToRevealSearch() {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <div className="h-[80px] bg-gray-800 text-white flex items-center justify-center px-4 shadow-md">
+        <div className="h-[80px] bg-gray-800 text-white flex items-center justify-center px-4">
           <div className="flex items-center gap-2 w-full max-w-md bg-gray-900 rounded px-3 py-1.5">
             <input
               type="text"
@@ -264,7 +292,7 @@ export default function PullToRevealSearch() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => setShowOverlay(true)}
-              className="flex-1 p-1 bg-transparent text-white placeholder-gray-300 focus:outline-none"
+              className="flex-1 p-1 bg-transparent text-white placeholder-gray-300 focus:outline-none text-base"
             />
             <button
               onClick={handleSearch}
@@ -275,7 +303,16 @@ export default function PullToRevealSearch() {
           </div>
         </div>
 
-        <div className="h-screen bg-sky-700">
+        {/* 날씨 콘텐츠 */}
+        <div
+          ref={contentRef}
+          onScroll={handleScroll}
+          className={`transition-all duration-300 ${
+            isSearchVisible
+              ? "h-screen overflow-hidden"
+              : "h-auto max-h-screen overflow-y-auto"
+          }`}
+        >
           <WeeklyForecastSwiper />
         </div>
       </div>
