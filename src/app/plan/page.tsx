@@ -94,6 +94,17 @@ export default function Plan() {
       return;
     }
 
+    const startDate = new Date(checkInDate);
+    const endDate = new Date(checkOutDate);
+    const timeDiff = endDate.getTime() - startDate.getTime();
+    const daysDiff = timeDiff / (1000 * 3600 * 24);
+
+    if (daysDiff > 30) {
+      setError('최대 30일까지 조회할 수 있습니다.');
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
       // 1. Geos API 호출
@@ -130,7 +141,8 @@ export default function Plan() {
       ]);
 
       if (!clothResponse.ok || !weatherResponse.ok) {
-        throw new Error(`API error! cloth: ${clothResponse.status}, weather: ${weatherResponse.status}`);
+        const errorResponse = await (clothResponse.ok ? weatherResponse : clothResponse).json();
+        throw new Error(errorResponse.msg || `API error! cloth: ${clothResponse.status}, weather: ${weatherResponse.status}`);
       }
 
       const [clothResult, weatherResult] = await Promise.all([
