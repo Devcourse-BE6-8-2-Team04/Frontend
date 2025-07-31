@@ -1,9 +1,5 @@
-// CategorySlider.tsx
-"use client";
-
 import React from "react";
 import Slider from "react-slick";
-import Card from "@/comments/comment/Card"; // Card 컴포넌트 임포트
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -20,39 +16,51 @@ interface CategorySliderProps {
 }
 
 export default function CategorySlider({ groupedItems, categoryNameMap }: CategorySliderProps) {
-    const settings = {
-        dots: true,
-        infinite: false,
-        speed: 500,
-        slidesToShow: 1,
-        slidesToScroll: 1,
-        arrows: false,
-        centerMode: true,
-        centerPadding: "20px",
-      };
-      
-      return (
-        <Slider {...settings} className="w-[350px] h-[375px]">
-          {Object.entries(groupedItems).map(([category, items]) => (
-            <Card
-              key={category}
-              className="w-[290px] h-[375px] p-6 bg-[#ffffffcf] rounded-[15px] shadow-[3px_4px_16.3px_#00000040] border-none mx-2"
-            >
-          <div className="text-center text-base font-semibold text-gray-700 pt-2">
-            {categoryNameMap[category] || category}
+  const settings = {
+    dots: true,
+    infinite: false,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    arrows: false,
+    centerMode: true,
+    centerPadding: "20px",
+  };
+
+  return (
+    <>
+      <Slider {...settings} className="custom-slick-slider w-[350px] h-[375px]">
+        {Object.entries(groupedItems).map(([category, items]) => (
+          <div key={category} style={{ padding: "0 0px" }}>
+            <div className="w-[290px] h-[375px] p-6 bg-[#ffffffcf] rounded-[15px] shadow-[3px_4px_10px_rgba(0,0,0,0.25)] mx-auto">
+              <div className="text-center text-base font-semibold text-gray-700 pt-2">
+                {categoryNameMap[category] || category}
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                {items.map((item, idx) => (
+                  <img
+                    key={idx}
+                    // src={item.imageUrl}
+                    src={"https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcQK1dXQrVCbBvMdU4A83XdwM7Rtte8YFsWFI-y5JLABKyTRyUTBQko0SqyrqNJQf96aNdEqLNo5eZglqCIH2udWwuewokYR5-0QnjucNq4Y5Q"}
+                    alt={item.clothName}
+                    className="w-[121px] h-[141px] object-cover"
+                  />
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-4">
-            {items.map((item, idx) => (
-              <img
-                key={idx}
-                src={item.imageUrl}
-                alt={item.clothName}
-                className="w-[121px] h-[141px] object-cover"
-              />
-            ))}
-          </div>
-        </Card>
-      ))}
-    </Slider>
+        ))}
+      </Slider>
+
+      <style jsx global>{`
+        /* slick-slider 및 slick-list의 overflow를 visible로 */
+        .custom-slick-slider.slick-slider {
+          overflow: visible !important;
+        }
+        .custom-slick-slider .slick-list {
+          overflow: visible !important;
+        }
+      `}</style>
+    </>
   );
 }
