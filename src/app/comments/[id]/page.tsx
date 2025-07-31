@@ -53,26 +53,11 @@ function CommentInfo({ commentState }: { commentState: ReturnType<typeof useComm
     });
   };
 
-  const handleDelete = async (password: string) => {
-    const isPasswordValid = await verifyPassword(password);
-    if(!isPasswordValid) return false;
-    
-    return true;
-  };
-
   const executeDelete = () => {
     if (!confirm(`${comment.id}번 글을 정말 삭제하시겠습니까?`)) return;
     deleteComment(() => router.back());
   };
-
-  const handleEdit = async (password: string) => {
-    const isPasswordValid = await verifyPassword(password);
-    if(!isPasswordValid) return false;
-    
-    // router.push(`/comments/edit/${id}`);
-    return true;
-  };
-
+  
   return (
     <div className="bg-white shadow-md rounded-xl p-6 space-y-4">
       {/* Title */}
@@ -138,14 +123,17 @@ function CommentInfo({ commentState }: { commentState: ReturnType<typeof useComm
           onClose={() => setShowPwModal(null)}
           onVerify={async (pw) => {
             if (showPwModal === "delete") {
-              const success = await handleDelete(pw);
-              if (success) {
+              const isValid = await verifyPassword(pw);
+              if (isValid) {
                 setShowPwModal(null);
                 setTimeout(() => executeDelete(), 10);
-              }
+             }
             } else {
-              const success = await handleEdit(pw);
-              if (success) setShowPwModal(null);
+              const isValid = await verifyPassword(pw);
+              if (isValid) {
+                setShowPwModal(null);
+                // router.push(`/comments/edit/${id}`);
+              }
             }
           }}
         />

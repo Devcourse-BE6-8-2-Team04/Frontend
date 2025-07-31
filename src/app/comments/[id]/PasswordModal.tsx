@@ -19,6 +19,9 @@ export default function PasswordModal({
           className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
           placeholder="비밀번호를 입력해주세요."
           autoFocus
+          autoComplete="current-password"
+          onKeyDown={(e) => e.key === 'Enter' && pw && onVerify(pw)}
+          aria-label="비밀번호 입력"
         />
         <div className="flex justify-end gap-2 pt-2">
           <button
@@ -30,7 +33,7 @@ export default function PasswordModal({
           <button
             onClick={() => onVerify(pw)}
             className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer"
-            disabled={!pw}
+            disabled={!pw.trim()}
           >
             확인
           </button>
