@@ -176,7 +176,12 @@ export default function PullToRevealSearch() {
 
       // 날씨 정보 업데이트 이벤트 발생
       window.dispatchEvent(
-        new CustomEvent("weather:update", { detail: weatherData })
+        new CustomEvent("weather:update", {
+          detail: {
+            weatherData,
+            source: "search",
+          },
+        })
       );
 
       // 검색 상태 초기화
@@ -212,11 +217,9 @@ export default function PullToRevealSearch() {
       const newLocation = { lat: latitude, lon: longitude };
 
       // 이미 현재 위치인 경우 요청하지 않음
-      if (
-        currentLocation &&
-        Math.abs(currentLocation.lat - newLocation.lat) < 0.001 &&
-        Math.abs(currentLocation.lon - newLocation.lon) < 0.001
-      ) {
+      const currentSource = (window as any).__currentWeatherSource;
+      if (currentSource === "current") {
+        closeOverlay();
         return;
       }
 
@@ -227,15 +230,15 @@ export default function PullToRevealSearch() {
 
       // 날씨 정보 업데이트 이벤트 발생
       window.dispatchEvent(
-        new CustomEvent("weather:update", { detail: weatherData })
+        new CustomEvent("weather:update", {
+          detail: {
+            weatherData,
+            source: "current",
+          },
+        })
       );
 
-      // 검색 상태 초기화
-      setShowOverlay(false);
-      setOffset(0);
-      setQuery("");
-      setSearchResults([]);
-      setIsSearching(false);
+      closeOverlay();
     } catch (error) {
       console.error("위치 정보 조회 실패:", error);
       alert("위치 정보를 가져올 수 없습니다.");

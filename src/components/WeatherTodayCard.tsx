@@ -4,6 +4,7 @@ import { WeatherInfoDto } from "@/lib/backend/apiV1/weatherService";
 import { weatherThemeMap } from "@/utils/weatherThemeMap";
 import WeatherCharacter from "./WeatherCharacter";
 import WeatherDetailCards from "./WeatherDetailCards";
+import { Navigation } from "lucide-react";
 
 /**
  * 오늘 날씨 정보를 표시하는 메인 카드 컴포넌트
@@ -18,8 +19,10 @@ import WeatherDetailCards from "./WeatherDetailCards";
  */
 export default function WeatherTodayCard({
   weather,
+  isCurrentLocation,
 }: {
   weather: WeatherInfoDto;
+  isCurrentLocation?: boolean;
 }) {
   // 날씨 상태에 따른 테마 정보 가져오기 (기본값: DEFAULT)
   const theme = weatherThemeMap[weather.weather] ?? weatherThemeMap.DEFAULT;
@@ -30,7 +33,10 @@ export default function WeatherTodayCard({
         {/* 왼쪽: 날씨 정보 섹션 */}
         <div className="flex flex-col gap-1">
           {/* 지역명 */}
-          <p className="text-lg font-medium">{weather.location}</p>
+          <p className="text-lg font-medium flex items-center gap-1">
+            {weather.location}
+            {isCurrentLocation && <Navigation size={16} />}
+          </p>
           {/* 날짜 */}
           <p className="text-sm text-white/80">{weather.date}</p>
           {/* 현재 체감 온도 (가장 큰 텍스트) */}

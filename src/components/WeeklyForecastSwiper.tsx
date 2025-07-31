@@ -34,25 +34,39 @@ export default function WeeklyForecastSwiper() {
     lat: number;
     lon: number;
   } | null>(null);
+  const [locationSource, setLocationSource] = useState<
+    "current" | "search" | "fallback" | null
+  >(null);
 
   // 사용자 현재 위치 가져오기 (나중에 수정 예정)
-  const getUserLocation = (): Promise<{ lat: number; lon: number }> => {
-    return new Promise((resolve, reject) => {
+  const getUserLocation = (): Promise<{
+    lat: number;
+    lon: number;
+    isFallback: boolean;
+  }> => {
+    return new Promise((resolve) => {
       if (!navigator.geolocation) {
         // 위치 정보를 지원하지 않는 경우 기본값 반환
-        resolve({ lat: 37.5665, lon: 126.978 }); // 서울 좌표
+        resolve({ lat: 37.5665, lon: 126.978, isFallback: true }); // 서울 좌표
         return;
       }
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          resolve({ lat: latitude, lon: longitude });
+          resolve({ lat: latitude, lon: longitude, isFallback: false });
         },
         (error) => {
           console.warn("위치 정보를 가져올 수 없습니다:", error);
+
+          // 첫 진입 시 한 번만 alert
+          if (!sessionStorage.getItem("locationAlertShown")) {
+            alert("위치 정보를 불러올 수 없습니다.");
+            sessionStorage.setItem("locationAlertShown", "true");
+          }
+
           // 에러 시 기본값 반환
-          resolve({ lat: 37.5665, lon: 126.978 }); // 서울 좌표
+          resolve({ lat: 37.5665, lon: 126.978, isFallback: true }); // 서울 좌표
         },
         {
           enableHighAccuracy: true,
@@ -73,6 +87,13 @@ export default function WeeklyForecastSwiper() {
         // 사용자 현재 위치 가져오기
         const location = await getUserLocation();
         setCurrentLocation(location);
+        if (location.isFallback) {
+          setLocationSource("fallback");
+          (window as any).__currentWeatherSource = "fallback";
+        } else {
+          setLocationSource("current");
+          (window as any).__currentWeatherSource = "current";
+        }
 
         const data = await getWeeklyWeather(location.lat, location.lon);
         setWeatherData(data);
@@ -90,11 +111,16 @@ export default function WeeklyForecastSwiper() {
   // 날씨 데이터 업데이트 이벤트 리스너
   useEffect(() => {
     const handleWeatherUpdate = (event: Event) => {
-      const customEvent = event as CustomEvent<WeatherInfoDto[]>;
+      const customEvent = event as CustomEvent<{
+        weatherData: WeatherInfoDto[];
+        source: "current" | "search";
+      }>;
       try {
         setLoading(true);
         setError(null);
-        setWeatherData(customEvent.detail);
+        setWeatherData(customEvent.detail.weatherData);
+        setLocationSource(customEvent.detail.source);
+        (window as any).__currentWeatherSource = customEvent.detail.source;
       } catch (err) {
         console.error("날씨 데이터 업데이트 실패:", err);
         setError("날씨 정보를 불러올 수 없습니다.");
@@ -168,9 +194,9 @@ export default function WeeklyForecastSwiper() {
         className="w-screen min-h-screen"
       >
         {/* 각 날짜별 날씨 슬라이드 */}
-        {weatherData.map((day) => {
-          // 날씨 상태에 따른 테마 정보 가져오기
+        {weatherData.map((day, idx) => {
           const theme = weatherThemeMap[day.weather] ?? weatherThemeMap.DEFAULT;
+          const isCurrent = locationSource === "current";
 
           return (
             <SwiperSlide key={day.id}>
@@ -181,7 +207,10 @@ export default function WeeklyForecastSwiper() {
               >
                 {/* 날씨 정보 카드 컨테이너 */}
                 <div className="min-h-screen px-4 py-6 max-w-md mx-auto pt-10 bg-black/10">
-                  <WeatherTodayCard weather={day} />
+                  <WeatherTodayCard
+                    weather={day}
+                    isCurrentLocation={isCurrent}
+                  />
                 </div>
               </div>
             </SwiperSlide>
