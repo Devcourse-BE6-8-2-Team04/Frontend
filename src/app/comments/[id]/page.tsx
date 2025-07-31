@@ -43,38 +43,34 @@ function CommentInfo({ commentState }: { commentState: ReturnType<typeof useComm
   }
 
   const verifyPassword = async (password: string) => {
-    try {
-      const res = await apiFetch(`/api/v1/comments/${id}/verify-password`, {
-        method: "POST",
-        body: JSON.stringify({ password }),
-      }).catch((error) => {
-        alert(`${error.resultCode} : ${error.msg}`);
-      });
-  
-      if (!res.data) {
-        alert("비밀번호가 일치하지 않습니다.");
-        return false;
-      }
-
-      return true;
-    } catch (err) {
-      console.error("비밀번호 검증 중 오류 발생:", err);
-      alert("비밀번호 검증 중 오류가 발생했습니다.");
+    return apiFetch(`/api/v1/comments/${id}/verify-password`, {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    }).then((res) => res.data === true)
+    .catch((error) => {
+      alert(error.msg);
       return false;
-    }
+    });
   };
 
   const handleDelete = async (password: string) => {
-    if(await verifyPassword(password)) {
-      if (!confirm(`${comment.id}번 글을 정말 삭제하시겠습니까?`)) return;
-      deleteComment(() => router.back());
-    }
+    const isPasswordValid = await verifyPassword(password);
+    if(!isPasswordValid) return false;
+    
+    return true;
+  };
+
+  const executeDelete = () => {
+    if (!confirm(`${comment.id}번 글을 정말 삭제하시겠습니까?`)) return;
+    deleteComment(() => router.back());
   };
 
   const handleEdit = async (password: string) => {
-    if(await verifyPassword(password)) {
-      // router.push(`/comments/edit/${id}`);
-    }
+    const isPasswordValid = await verifyPassword(password);
+    if(!isPasswordValid) return false;
+    
+    // router.push(`/comments/edit/${id}`);
+    return true;
   };
 
   return (
@@ -138,14 +134,22 @@ function CommentInfo({ commentState }: { commentState: ReturnType<typeof useComm
       </div>
 
       {showPwModal && (
-      <PasswordModal
-        onClose={() => setShowPwModal(null)}
-        onVerify={(pw) => {
-          showPwModal === "delete" ? handleDelete(pw) : handleEdit(pw);
-          setShowPwModal(null);
-        }}
-      />
-    )}
+        <PasswordModal
+          onClose={() => setShowPwModal(null)}
+          onVerify={async (pw) => {
+            if (showPwModal === "delete") {
+              const success = await handleDelete(pw);
+              if (success) {
+                setShowPwModal(null);
+                setTimeout(() => executeDelete(), 10);
+              }
+            } else {
+              const success = await handleEdit(pw);
+              if (success) setShowPwModal(null);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
