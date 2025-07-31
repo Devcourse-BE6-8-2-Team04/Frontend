@@ -1,8 +1,8 @@
 import React, { ReactNode } from "react";
 
 interface BackgroundLayoutProps {
-  backgroundImage?: string; // 배경 이미지 경로
-  backgroundColor?: string; // 배경색
+  backgroundImage?: string; 
+  backgroundColor?: string; 
   children: ReactNode;
 }
 

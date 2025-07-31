@@ -3,7 +3,7 @@
 
 import React from "react";
 import Slider from "react-slick";
-import Card from "@/comments/comment/Card"; // Card 컴포넌트 임포트
+import Card from "@/components/common/Card"; // Card 컴포넌트 임포트
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -28,7 +28,7 @@ export default function CategorySlider({ groupedItems, categoryNameMap }: Catego
         slidesToScroll: 1,
         arrows: false,
         centerMode: true,
-        centerPadding: "20px",
+        centerPadding: "32px",
       };
       
       return (
@@ -36,7 +36,7 @@ export default function CategorySlider({ groupedItems, categoryNameMap }: Catego
           {Object.entries(groupedItems).map(([category, items]) => (
             <Card
               key={category}
-              className="w-[290px] h-[375px] p-6 bg-[#ffffffcf] rounded-[15px] shadow-[3px_4px_16.3px_#00000040] border-none mx-2"
+              className="w-[290px] h-[375px] p-6 bg-[#ffffffcf] rounded-[15px] shadow-[3px_4px_16.3px_#00000040] border-none"
             >
           <div className="text-center text-base font-semibold text-gray-700 pt-2">
             {categoryNameMap[category] || category}
