@@ -1,15 +1,15 @@
 "use client";
 
 import * as React from "react";
-import Card from "@/comments/comment/Card";
-import BackgroundLayout from "@/comments/layout/BackgroundLayout";
+import Card from "@/components/common/Card";
+import BackgroundLayout from "@/components/layout/BackgroundLayout";
 import { Sun, ThermometerSnowflake, ThermometerSun } from "lucide-react";
 import { useClothDetailData } from "@/features/clothdetail/hook";
-import Nav from "@/comments/layout/NavBar";
+import Nav from "@/components/layout/NavBar";
 
 import dynamic from "next/dynamic";
 
-const CategorySlider = dynamic(() => import("@/comments/comment/CategorySlider"), {
+const CategorySlider = dynamic(() => import("@/components/common/CategorySlider"), {
   ssr: false, 
 });
 
