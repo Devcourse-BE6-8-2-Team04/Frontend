@@ -48,6 +48,10 @@ WBS는 위에서 세분화한 작업을 **언제 누가 어떻게 진행했는�
 git clone https://github.com/Devcourse-BE6-8-2-Team04/Frontend.git
 cd Team4_Frontend/frontend
 npm install
+npm install clsx lucide-react
+npm install react-slick slick-carousel
+npm install --save-dev @types/react-slick
+
 npm run dev
 ```
 
