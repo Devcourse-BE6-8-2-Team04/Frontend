@@ -5,7 +5,7 @@ import Modal from "./Modal";
 import type { components } from "@/lib/backend/apiV1/schema";
 import { apiFetch } from "@/lib/backend/client";
 import Link from "next/link";
-import { Search, X, Plus, ChevronLeft, ChevronRight, Calendar, MapPin, Thermometer } from "lucide-react";
+import { Search, X, PenTool, ChevronLeft, ChevronRight, Calendar, MapPin, Thermometer } from "lucide-react";
 
 type CommentDto = components["schemas"]["CommentDto"];
 
@@ -119,17 +119,19 @@ export default function Page() {
             {/* Header */}
             <div className="bg-white shadow-sm sticky top-0 z-40">
                 <div className="p-4">
-                    <div className="flex justify-between items-center">
-                        <Link href="/comments" className="text-2xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    <div className="flex relative items-center">
+                        <Link href="/comments" className="absolute left-1/2 transform -translate-x-1/2 text-xl md:text-2xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                             WearLog
                         </Link>
-                        <button
-                            onClick={() => setShowModal(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all transform hover:scale-105 active:scale-95 shadow-lg"
-                        >
-                            <Plus size={18} />
-                            <span className="hidden sm:inline">코멘트 작성</span>
-                        </button>
+                        <div className="ml-auto">
+                            <button
+                                onClick={() => setShowModal(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-xl hover:bg-indigo-400 transition-all transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                            >
+                                <PenTool size={18} />
+                                <span className="hidden sm:inline">글 쓰기</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -140,7 +142,7 @@ export default function Page() {
                     <div className="p-4">
                         <button
                             onClick={() => setIsFilterExpanded(!isFilterExpanded)}
-                            className="flex items-center justify-between w-full text-left"
+                            className="flex items-center justify-between w-full text-left cursor-pointer"
                         >
                             <div className="flex items-center gap-2">
                                 <Search size={20} className="text-gray-400" />
@@ -191,13 +193,13 @@ export default function Page() {
                                 <div className="flex gap-3">
                                     <button
                                         onClick={handleSearch}
-                                        className="flex-1 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all transform hover:scale-[1.02] active:scale-[0.98] font-medium"
+                                        className="flex-1 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all transform hover:scale-[1.02] active:scale-[0.98] font-medium cursor-pointer"
                                     >
                                         검색하기
                                     </button>
                                     <button
                                         onClick={handleReset}
-                                        className="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all transform hover:scale-[1.02] active:scale-[0.98] font-medium"
+                                        className="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all transform hover:scale-[1.02] active:scale-[0.98] font-medium cursor-pointer"
                                     >
                                         초기화
                                     </button>
