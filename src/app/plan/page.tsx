@@ -30,35 +30,35 @@ interface ClothApiResponse {
 }
 
 interface Weather {
-    id: number;
-    weather: string;
-    description: string;
-    dailyTemperatureGap: number;
-    feelsLikeTemperature: number;
-    maxTemperature: number;
-    minTemperature: number;
-    pop: number;
-    rain: number;
-    snow: number;
-    humidity: number;
-    windSpeed: number;
-    windDeg: number;
-    uvi: number;
-    location: string;
-    date: string;
+  id: number;
+  weather: string;
+  description: string;
+  dailyTemperatureGap: number;
+  feelsLikeTemperature: number;
+  maxTemperature: number;
+  minTemperature: number;
+  pop: number;
+  rain: number;
+  snow: number;
+  humidity: number;
+  windSpeed: number;
+  windDeg: number;
+  uvi: number;
+  location: string;
+  date: string;
 }
 
-interface WeatherApiResponse extends Array<Weather>{}
+type WeatherApiResponse = Weather[];
 
 interface Geo {
-    name: string;
-    country: string;
-    lat: number;
-    lon: number;
-    localName: string;
+  name: string;
+  country: string;
+  lat: number;
+  lon: number;
+  localName: string;
 }
 
-interface GeoApiResponse extends Array<Geo>{}
+type GeoApiResponse = Geo[];
 
 
 interface ScrollState {
@@ -75,7 +75,6 @@ export default function Plan() {
   const [locationName, setLocationName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [warningMessage, setWarningMessage] = useState('');
 
   const scrollRefs = useRef<{
     [key: string]: React.RefObject<HTMLDivElement>
@@ -85,7 +84,6 @@ export default function Plan() {
   }>({});
 
   const handleConfirm = async () => {
-    setWarningMessage('');
     setError(null);
     setClothData(null);
     setWeatherData(null);
@@ -96,18 +94,21 @@ export default function Plan() {
       return;
     }
 
-    const depDate = new Date(checkInDate);
-    const arrDate = new Date(checkOutDate);
+    const startDate = new Date(checkInDate);
+    const endDate = new Date(checkOutDate);
+    const timeDiff = endDate.getTime() - startDate.getTime();
+    const daysDiff = timeDiff / (1000 * 3600 * 24);
 
-    if (arrDate < depDate) {
-      setWarningMessage('체크아웃 날짜는 체크인 날짜보다 빠를 수 없습니다.');
+    if (daysDiff > 30) {
+      setError('최대 30일까지 조회할 수 있습니다.');
+      setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
     try {
       // 1. Geos API 호출
-      const geoResponse = await fetch(`/api/v1/geos?location=${destination}`);
+      const geoResponse = await fetch(`/api/v1/geos?location=${encodeURIComponent(destination)}`);
       if (!geoResponse.ok) {
         throw new Error(`Geos API error! status: ${geoResponse.status}`);
       }
@@ -120,9 +121,11 @@ export default function Plan() {
 
       // 2. Cloth 및 Weather API 동시 호출
       const clothParams = new URLSearchParams({
-        place: locationInfo.name,
+        location: locationInfo.name,
         start: checkInDate,
         end: checkOutDate,
+        lat: locationInfo.lat.toString(),
+        lon: locationInfo.lon.toString(),
       });
       const weatherParams = new URLSearchParams({
         location: locationInfo.name,
@@ -138,7 +141,8 @@ export default function Plan() {
       ]);
 
       if (!clothResponse.ok || !weatherResponse.ok) {
-        throw new Error(`API error! cloth: ${clothResponse.status}, weather: ${weatherResponse.status}`);
+        const errorResponse = await (clothResponse.ok ? weatherResponse : clothResponse).json();
+        throw new Error(errorResponse.msg || `API error! cloth: ${clothResponse.status}, weather: ${weatherResponse.status}`);
       }
 
       const [clothResult, weatherResult] = await Promise.all([
@@ -169,9 +173,13 @@ export default function Plan() {
       scrollRefs.current = newRefs;
       setScrollStates(newScrollStates);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('API 요청 에러:', err);
-      setError(err.message || 'API 요청에 실패했습니다. 다시 시도해주세요.');
+      if (err instanceof Error) {
+        setError(err.message || 'API 요청에 실패했습니다. 다시 시도해주세요.');
+      } else {
+        setError('API 요청에 실패했습니다. 다시 시도해주세요.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -189,7 +197,7 @@ export default function Plan() {
 
   useEffect(() => {
     Object.keys(scrollRefs.current).forEach(key => {
-        checkScrollability(key);
+      checkScrollability(key);
     });
   }, [clothData, weatherData]);
 
@@ -204,24 +212,24 @@ export default function Plan() {
 
   const renderWeatherResults = () => {
     if (!weatherData) return null;
-    
+
     return (
-      <div className="mb-8 relative">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">{locationName} 날씨 정보</h2>
-        <button onClick={() => handleScroll('weather', 'left')} disabled={!scrollStates['weather']?.canScrollLeft} className="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed">&lt;</button>
-        <div ref={scrollRefs.current['weather']} onScroll={() => checkScrollability('weather')} className="flex overflow-x-auto space-x-4 p-2 scroll-smooth scrollbar-hide">
+        <div className="mb-8 relative">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">{locationName} 날씨 정보</h2>
+          <button onClick={() => handleScroll('weather', 'left')} disabled={!scrollStates['weather']?.canScrollLeft} className="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed">&lt;</button>
+          <div ref={scrollRefs.current['weather']} onScroll={() => checkScrollability('weather')} className="flex overflow-x-auto space-x-4 p-2 scroll-smooth scrollbar-hide">
             {weatherData.map(weather => (
                 <div key={weather.id} className="flex-shrink-0 w-48 border rounded-lg p-4 shadow">
-                    <p className="font-semibold">{weather.date}</p>
-                    <p>최고/최저: {weather.maxTemperature}°/{weather.minTemperature}°</p>
-                    <p>체감: {weather.feelsLikeTemperature}°C</p>
-                    <p>하늘: {weather.description}</p>
-                    <p>강수: {weather.pop}%</p>
+                  <p className="font-semibold">{weather.date}</p>
+                  <p>최고/최저: {weather.maxTemperature}°/{weather.minTemperature}°</p>
+                  <p>체감: {weather.feelsLikeTemperature}°C</p>
+                  <p>하늘: {weather.description}</p>
+                  <p>강수: {weather.pop}%</p>
                 </div>
             ))}
+          </div>
+          <button onClick={() => handleScroll('weather', 'right')} disabled={!scrollStates['weather']?.canScrollRight} className="absolute right-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed">&gt;</button>
         </div>
-        <button onClick={() => handleScroll('weather', 'right')} disabled={!scrollStates['weather']?.canScrollRight} className="absolute right-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed">&gt;</button>
-      </div>
     );
   };
 
@@ -229,47 +237,47 @@ export default function Plan() {
     if (!clothData) return null;
 
     return (
-      <div className="w-full">
-        {Object.entries(clothData.clothes).map(([category, clothes]) => (
-          <div key={category} className="mb-8 relative">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">{category}</h2>
-            <button onClick={() => handleScroll(category, 'left')} disabled={!scrollStates[category]?.canScrollLeft} className="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed">&lt;</button>
-            <div ref={scrollRefs.current[category]} onScroll={() => checkScrollability(category)} className="flex overflow-x-auto space-x-4 p-2 scroll-smooth scrollbar-hide">
-              {clothes.map((cloth) => (
-                <div key={cloth.id} className="flex-shrink-0 w-48 border rounded-lg shadow-md overflow-hidden">
-                  <div className="relative w-full h-40">
-                    <Image src={cloth.imageUrl} alt={cloth.clothName} layout="fill" objectFit="cover" />
-                  </div>
-                  <div className="p-2 text-center">
-                    <p className="font-semibold text-gray-700">{cloth.clothName}</p>
-                  </div>
+        <div className="w-full">
+          {Object.entries(clothData.clothes).map(([category, clothes]) => (
+              <div key={category} className="mb-8 relative">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">{category}</h2>
+                <button onClick={() => handleScroll(category, 'left')} disabled={!scrollStates[category]?.canScrollLeft} className="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed">&lt;</button>
+                <div ref={scrollRefs.current[category]} onScroll={() => checkScrollability(category)} className="flex overflow-x-auto space-x-4 p-2 scroll-smooth scrollbar-hide">
+                  {clothes.map((cloth) => (
+                      <div key={cloth.id} className="flex-shrink-0 w-48 border rounded-lg shadow-md overflow-hidden">
+                        <div className="relative w-full h-40">
+                          <Image src={cloth.imageUrl} alt={cloth.clothName} layout="fill" objectFit="cover" />
+                        </div>
+                        <div className="p-2 text-center">
+                          <p className="font-semibold text-gray-700">{cloth.clothName}</p>
+                        </div>
+                      </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <button onClick={() => handleScroll(category, 'right')} disabled={!scrollStates[category]?.canScrollRight} className="absolute right-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed">&gt;</button>
-          </div>
-        ))}
+                <button onClick={() => handleScroll(category, 'right')} disabled={!scrollStates[category]?.canScrollRight} className="absolute right-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed">&gt;</button>
+              </div>
+          ))}
 
-        {clothData.extraClothes.EXTRA && clothData.extraClothes.EXTRA.length > 0 && (
-          <div className="mb-8 relative">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">챙겨가면 좋은 것들</h2>
-            <button onClick={() => handleScroll('extra', 'left')} disabled={!scrollStates['extra']?.canScrollLeft} className="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed">&lt;</button>
-            <div ref={scrollRefs.current['extra']} onScroll={() => checkScrollability('extra')} className="flex overflow-x-auto space-x-4 p-2 scroll-smooth scrollbar-hide">
-              {clothData.extraClothes.EXTRA.map((item) => (
-                <div key={item.id} className="flex-shrink-0 w-48 border rounded-lg shadow-md overflow-hidden">
-                  <div className="relative w-full h-40">
-                    <Image src={item.imageUrl} alt={item.clothName} layout="fill" objectFit="cover" />
-                  </div>
-                  <div className="p-2 text-center">
-                    <p className="font-semibold text-gray-700">{item.clothName}</p>
-                  </div>
+          {clothData.extraClothes.EXTRA && clothData.extraClothes.EXTRA.length > 0 && (
+              <div className="mb-8 relative">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">챙겨가면 좋은 것들</h2>
+                <button onClick={() => handleScroll('extra', 'left')} disabled={!scrollStates['extra']?.canScrollLeft} className="absolute left-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed">&lt;</button>
+                <div ref={scrollRefs.current['extra']} onScroll={() => checkScrollability('extra')} className="flex overflow-x-auto space-x-4 p-2 scroll-smooth scrollbar-hide">
+                  {clothData.extraClothes.EXTRA.map((item) => (
+                      <div key={item.id} className="flex-shrink-0 w-48 border rounded-lg shadow-md overflow-hidden">
+                        <div className="relative w-full h-40">
+                          <Image src={item.imageUrl} alt={item.clothName} layout="fill" objectFit="cover" />
+                        </div>
+                        <div className="p-2 text-center">
+                          <p className="font-semibold text-gray-700">{item.clothName}</p>
+                        </div>
+                      </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <button onClick={() => handleScroll('extra', 'right')} disabled={!scrollStates['extra']?.canScrollRight} className="absolute right-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed">&gt;</button>
-          </div>
-        )}
-      </div>
+                <button onClick={() => handleScroll('extra', 'right')} disabled={!scrollStates['extra']?.canScrollRight} className="absolute right-0 top-1/2 -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full z-10 disabled:opacity-50 disabled:cursor-not-allowed">&gt;</button>
+              </div>
+          )}
+        </div>
     );
   };
 
@@ -288,72 +296,59 @@ export default function Plan() {
 
     return (
         <div className="w-full">
-            {renderWeatherResults()}
-            {renderClothResults()}
+          {renderWeatherResults()}
+          {renderClothResults()}
         </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-gray-50 p-4">
-      <div className="w-full max-w-5xl mt-10 p-6 bg-white rounded-lg shadow-lg flex items-end gap-4">
-        <div className="flex flex-col flex-grow">
-          <label htmlFor="destination" className="text-base font-semibold text-gray-700 mb-2">여행지</label>
-          <input
-            type="text"
-            id="destination"
-            placeholder="어디로 떠나시나요?"
-            className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-          />
-        </div>
-        <div className="flex flex-col flex-grow">
-          <label htmlFor="checkInDate" className="text-base font-semibold text-gray-700 mb-2">체크인</label>
-          <input
-            type="date"
-            id="checkInDate"
-            className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-            value={checkInDate}
-            onChange={(e) => setCheckInDate(e.target.value)}
-          />
-        </div>
-        <div className="flex flex-col flex-grow">
-          <label htmlFor="checkOutDate" className="text-base font-semibold text-gray-700 mb-2">체크아웃</label>
-          <input
-            type="date"
-            id="checkOutDate"
-            className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-            value={checkOutDate}
-            onChange={(e) => setCheckOutDate(e.target.value)}
-          />
-        </div>
-        <button
-          className="px-6 py-2 bg-blue-600 text-white font-bold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-shrink-0"
-          onClick={handleConfirm}
-          disabled={isLoading}
-        >
-          {isLoading ? '로딩중...' : '확인'}
-        </button>
-      </div>
-      
-      <div className="w-full max-w-5xl mt-10 p-6 bg-white rounded-lg shadow-lg min-h-[24rem] flex items-center justify-center">
-        {renderContent()}
-      </div>
-
-      {warningMessage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40" onClick={() => setWarningMessage('')}>
-          <div className="bg-white p-6 rounded-lg shadow-lg text-center z-50" onClick={(e) => e.stopPropagation()}>
-            <p className="text-lg font-semibold text-red-600 mb-4">{warningMessage}</p>
-            <button
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              onClick={() => setWarningMessage('')}
-            >
-              확인
-            </button>
+      <div className="min-h-screen flex flex-col items-center bg-gray-50 p-4">
+        <div className="w-full max-w-5xl mt-10 p-6 bg-white rounded-lg shadow-lg flex flex-col md:flex-row md:items-end gap-4">
+          <div className="flex flex-col flex-grow w-full">
+            <label htmlFor="destination" className="text-base font-semibold text-gray-700 mb-2">여행지</label>
+            <input
+                type="text"
+                id="destination"
+                placeholder="어디로 떠나시나요?"
+                className="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+            />
           </div>
+          <div className="flex flex-col flex-grow w-full">
+            <label htmlFor="checkInDate" className="text-base font-semibold text-gray-700 mb-2">체크인</label>
+            <input
+                type="date"
+                id="checkInDate"
+                className="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                value={checkInDate}
+                onChange={(e) => setCheckInDate(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col flex-grow w-full">
+            <label htmlFor="checkOutDate" className="text-base font-semibold text-gray-700 mb-2">체크아웃</label>
+            <input
+                type="date"
+                id="checkOutDate"
+                className="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                value={checkOutDate}
+                onChange={(e) => setCheckOutDate(e.target.value)}
+            />
+          </div>
+          <button
+              className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white font-bold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-shrink-0"
+              onClick={handleConfirm}
+              disabled={isLoading}
+          >
+            {isLoading ? '로딩중...' : '확인'}
+          </button>
         </div>
-      )}
-    </div>
+
+        <div className="w-full max-w-5xl mt-10 p-6 bg-white rounded-lg shadow-lg min-h-[24rem] flex items-center justify-center">
+          {renderContent()}
+        </div>
+
+        </div>
   );
 }
