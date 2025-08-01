@@ -37,7 +37,7 @@ export default function Plan() {
             isLoading={isLoading}
           />
 
-          <div className="w-full mt-6 p-4 bg-white/50 backdrop-blur-sm rounded-xl shadow-lg min-h-[30rem] flex items-center justify-center">
+          <div className="w-full mt-6 p-4 bg-white/50 backdrop-blur-sm rounded-xl shadow-lg h-[30rem] flex items-center justify-center">
             <ResultsDisplay
               isLoading={isLoading}
               error={error}

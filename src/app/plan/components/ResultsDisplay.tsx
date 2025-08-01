@@ -42,7 +42,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full h-full overflow-y-auto">
       <WeatherResults weatherData={weatherData} locationName={locationName} />
       <ClothResults clothData={clothData} />
     </div>
