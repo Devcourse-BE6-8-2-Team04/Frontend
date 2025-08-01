@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Modal from "./Modal";
+import Modal from "../modals/Modal";
 import { Header } from "./CommentsHeader";
 import { SearchFilters } from "./SearchFilters";
 import { ActiveFilters } from "./ActiveFilters";

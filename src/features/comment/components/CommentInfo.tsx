@@ -4,7 +4,7 @@ import { useComment } from "../hooks/useComment";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { CommentHeader } from "./CommentHeader";
 import { CommentCard } from "./CommentCard";
-import PasswordModal from "./PasswordModal";
+import PasswordModal from "../modals/PasswordModal";
 
 interface CommentInfoProps {
   commentState: ReturnType<typeof useComment>;
