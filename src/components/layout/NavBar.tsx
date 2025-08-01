@@ -1,5 +1,6 @@
 import React from "react";
 import { Home, Search, ShoppingBag, Menu } from "lucide-react";
+import Link from "next/link";
 
 export default function NavBar() {
   return (
@@ -9,7 +10,9 @@ export default function NavBar() {
   
       {/* 실제 네비게이션 바 */}
       <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md h-[73px] bg-white flex justify-between items-center px-10 z-10">
-        <Search className="w-6 h-6" />
+        <Link href="/plan">
+          <Search className="w-6 h-6" />
+        </Link>
         <Home className="w-6 h-6" />
         <ShoppingBag className="w-6 h-6" />
         <Menu className="w-6 h-6" />
