@@ -69,7 +69,7 @@ export default function CommentsMain() {
     <div className="min-h-screen bg-gray-50 pb-[73px]">
       <Header onCreateClick={() => setShowModal(true)} />
 
-      <div className="px-4 py-6 max-w-7xl mx-auto">
+      <div className="px-4 py-6 max-w-4xl mx-auto">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
           <SearchFilters onFiltersChange={handleFiltersChange} />
           <ActiveFilters filters={filters} onFiltersChange={handleFiltersChange} />
