@@ -6,7 +6,7 @@ import { Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-import { weatherThemeMap } from "@/features/weather/utils/weatherThemeMap";
+import { getBackgroundImage } from "@/features/weather/utils/weatherBackgroundMap";
 import WeatherTodayCard from "./WeatherTodayCard";
 import {
   getWeeklyWeather,
@@ -195,7 +195,7 @@ export default function WeeklyForecastSwiper() {
       >
         {/* 각 날짜별 날씨 슬라이드 */}
         {weatherData.map((day) => {
-          const theme = weatherThemeMap[day.weather] ?? weatherThemeMap.DEFAULT;
+          const backgroundImage = getBackgroundImage(day.weather);
           const isCurrent = locationSource === "current";
 
           return (
@@ -203,7 +203,7 @@ export default function WeeklyForecastSwiper() {
               {/* 배경 이미지가 적용된 슬라이드 컨테이너 */}
               <div
                 className="min-h-screen bg-cover bg-center"
-                style={{ backgroundImage: `url(${theme.backgroundImage})` }}
+                style={{ backgroundImage: `url(${backgroundImage})` }}
               >
                 {/* 어두운 반투명 오버레이 */}
                 <div className="absolute inset-0 bg-black/10 z-0" />
