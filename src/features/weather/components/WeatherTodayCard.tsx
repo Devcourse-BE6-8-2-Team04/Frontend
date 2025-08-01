@@ -28,7 +28,7 @@ export default function WeatherTodayCard({
   const theme = weatherThemeMap[weather.weather] ?? weatherThemeMap.DEFAULT;
 
   return (
-    <div className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] px-3 pt-6 pb-12">
+    <div className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] px-3 pt-6 pb-12 pb-[73px]">
       <div className="flex justify-between items-center gap-6 px-3">
         {/* 왼쪽: 날씨 정보 섹션 */}
         <div className="flex flex-col gap-1">
