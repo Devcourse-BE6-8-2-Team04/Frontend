@@ -67,7 +67,7 @@ function CommentInfo({ commentState }: { commentState: ReturnType<typeof useComm
   };
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-[73px]">
       {/* Header */}
       <div className="bg-white shadow-sm sticky top-0 z-40">
         <div className="p-4">
