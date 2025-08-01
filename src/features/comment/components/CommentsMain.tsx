@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Modal from "./Modal";
-import { Header } from "./Header";
+import { Header } from "./CommentsHeader";
 import { SearchFilters } from "./SearchFilters";
 import { ActiveFilters } from "./ActiveFilters";
 import { ResultsCount } from "./ResultsCount";
