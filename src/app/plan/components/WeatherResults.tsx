@@ -49,9 +49,9 @@ const WeatherResults: React.FC<WeatherResultsProps> = ({
         onScroll={checkScrollability}
         className="flex overflow-x-auto space-x-4 p-2 scroll-smooth scrollbar-hide"
       >
-        {weatherData.map((weather: Weather, index) => (
+        {weatherData.map((weather: Weather) => (
           <div
-            key={`${weather.id}-${index}`}
+            key={weather.id}
             className="flex-shrink-0 w-40 border rounded-lg p-3 shadow-sm bg-white/80"
           >
             <p className="font-semibold text-sm">{weather.date}</p>

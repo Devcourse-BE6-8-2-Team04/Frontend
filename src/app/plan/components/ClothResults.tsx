@@ -64,9 +64,9 @@ const ClothResults: React.FC<ClothResultsProps> = ({ clothData }) => {
             onScroll={() => checkScrollability(category)}
             className="flex overflow-x-auto space-x-4 p-2 scroll-smooth scrollbar-hide"
           >
-            {clothes.map((cloth: Cloth, index) => (
+            {clothes.map((cloth: Cloth) => (
               <div
-                key={`${cloth.id}-${index}`}
+                key={cloth.id}
                 className="flex-shrink-0 w-36 border rounded-lg shadow-md overflow-hidden bg-white/80"
               >
                 <div className="relative w-full h-32">
@@ -99,9 +99,9 @@ const ClothResults: React.FC<ClothResultsProps> = ({ clothData }) => {
               onScroll={() => checkScrollability('extra')}
               className="flex overflow-x-auto space-x-4 p-2 scroll-smooth scrollbar-hide"
             >
-              {clothData.extraClothes.EXTRA.map((item, index) => (
+              {clothData.extraClothes.EXTRA.map(item => (
                 <div
-                  key={`extra-${item.id}-${index}`}
+                  key={`extra-${item.id}`}
                   className="flex-shrink-0 w-36 border rounded-lg shadow-md overflow-hidden bg-white/80"
                 >
                   <div className="relative w-full h-32">
