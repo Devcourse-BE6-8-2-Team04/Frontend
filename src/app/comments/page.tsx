@@ -120,7 +120,7 @@ export default function Page() {
       <div className="bg-white shadow-sm sticky top-0 z-40">
         <div className="p-4">
           <div className="flex relative items-center">
-            <Link href="/" className="absolute left-1/2 transform -translate-x-1/2 text-xl md:text-2xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <Link href="/" className="absolute left-1/2 transform -translate-x-1/2 text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-800 to-purple-800 bg-clip-text text-transparent">
               WearLog
             </Link>
             <div className="ml-auto">

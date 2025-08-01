@@ -79,7 +79,7 @@ function CommentInfo({ commentState }: { commentState: ReturnType<typeof useComm
               <ChevronLeft size={20} className="text-gray-600" />
             </button>
 
-            <Link href="/comments" className="absolute left-1/2 transform -translate-x-1/2 text-xl sm:text-2xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <Link href="/comments" className="absolute left-1/2 transform -translate-x-1/2 text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-800 to-purple-800 bg-clip-text text-transparent">
               WearLog
             </Link>
 
