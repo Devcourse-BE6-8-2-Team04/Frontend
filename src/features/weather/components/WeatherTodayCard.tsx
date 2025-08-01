@@ -1,7 +1,7 @@
 "use client";
 
+import { getCharacterImage } from "@/features/weather/utils/weatherCharacterMap";
 import { WeatherInfoDto } from "@/lib/backend/apiV1/weatherService";
-import { weatherThemeMap } from "@/features/weather/utils/weatherThemeMap";
 import WeatherCharacter from "./WeatherCharacter";
 import WeatherDetailCards from "./WeatherDetailCards";
 import { Navigation } from "lucide-react";
@@ -25,7 +25,10 @@ export default function WeatherTodayCard({
   isCurrentLocation?: boolean;
 }) {
   // 날씨 상태에 따른 테마 정보 가져오기 (기본값: DEFAULT)
-  const theme = weatherThemeMap[weather.weather] ?? weatherThemeMap.DEFAULT;
+  const characterImage = getCharacterImage(
+    weather.feelsLikeTemperature,
+    weather.weather
+  );
 
   return (
     <div className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] px-3 pt-6 pb-12 pb-[73px]">
@@ -60,7 +63,7 @@ export default function WeatherTodayCard({
 
         {/* 오른쪽: 날씨 캐릭터 이미지 */}
         <div className="w-32 h-32 flex-shrink-0 flex items-end justify-center mt-2">
-          <WeatherCharacter src={theme.characterImage} />
+          <WeatherCharacter src={characterImage} />
         </div>
       </div>
 
