@@ -11,14 +11,9 @@ import { Pagination } from "./Pagination";
 import { LoadingSpinner } from "./LoadingSpinner";
 import type { components } from "@/lib/backend/apiV1/schema";
 import { apiFetch } from "@/lib/backend/client";
+import { SearchFiltersType } from "../types";
 
 type CommentDto = components["schemas"]["CommentDto"];
-
-interface SearchFiltersType {
-  location?: string;
-  feelsLikeTemperature?: number;
-  month?: number;
-}
 
 export default function CommentsMain() {
   const [comments, setComments] = useState<CommentDto[] | null>(null);
@@ -30,18 +25,21 @@ export default function CommentsMain() {
   const [filters, setFilters] = useState<SearchFiltersType>({});
 
   const fetchComments = async (currentPage: number, searchFilters: SearchFiltersType) => {
-    let queryParams = `page=${currentPage}&size=10`;
+    const params = new URLSearchParams({
+      page: currentPage.toString(),
+      size: '10'
+    });
+       
+    if (searchFilters.location) params.append('location', searchFilters.location);
+    if (searchFilters.feelsLikeTemperature !== undefined) params.append('feelsLikeTemperature', searchFilters.feelsLikeTemperature.toString());
+    if (searchFilters.month !== undefined) params.append('month', searchFilters.month.toString());
 
-    if (searchFilters.location) queryParams += `&location=${encodeURIComponent(searchFilters.location)}`;
-    if (searchFilters.feelsLikeTemperature !== undefined) queryParams += `&feelsLikeTemperature=${searchFilters.feelsLikeTemperature}`;
-    if (searchFilters.month !== undefined) queryParams += `&month=${searchFilters.month}`;
-
-    apiFetch(`/api/v1/comments?${queryParams}`).then((res) => {
+    apiFetch(`/api/v1/comments?${params}`).then((res) => {
       setComments(res.content || []);
       setTotalPages(res.totalPages ?? 0);
       setTotalElements(res.totalElements);
     }).catch((error) => {
-      alert(`${error.resultCode} : ${error.msg}`);
+      console.error(`${error.resultCode} : ${error.msg}`);
     });
   };
 

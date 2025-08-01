@@ -8,11 +8,23 @@ export function useComment(id: number) {
   const [comment, setComment] = useState<CommentDto | null>(null);
 
   useEffect(() => {
+    let isCancelled = false;
+
     apiFetch(`/api/v1/comments/${id}`)
-      .then(setComment)
+      .then((data) => {
+        if (!isCancelled) {
+          setComment(data);
+        }
+      })
       .catch((error) => {
-        alert(`${error.resultCode} : ${error.msg}`);
+        if (!isCancelled) {
+          console.error(`${error.resultCode} : ${error.msg}`);
+        }
       });
+
+    return () => {
+      isCancelled = true;
+    };
   }, [id]);
 
   const deleteComment = (onSuccess: () => void) => {
@@ -21,7 +33,7 @@ export function useComment(id: number) {
     })
       .then(onSuccess)
       .catch((error) => {
-        alert(`${error.resultCode} : ${error.msg}`);
+        console.error(`${error.resultCode} : ${error.msg}`);
       });
   };
 
@@ -31,7 +43,7 @@ export function useComment(id: number) {
       body: JSON.stringify({ password }),
     }).then((res) => res.data === true)
     .catch((error) => {
-      alert(error.msg);
+      throw new Error(error.msg);
       return false;
     });
   };

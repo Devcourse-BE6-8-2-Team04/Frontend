@@ -22,7 +22,7 @@ export function WeatherInfo({ weatherInfo }: WeatherInfoProps) {
             <span className="text-sm font-medium text-gray-700">{weatherInfo.location}</span>
           </div>
         )}
-        {weatherInfo.feelsLikeTemperature && (
+        {weatherInfo.feelsLikeTemperature !== undefined && (
           <div className="flex items-center gap-2 bg-white p-3 rounded-xl">
             <Thermometer size={16} className="text-blue-500" />
             <span className="text-sm font-medium text-gray-700">{weatherInfo.feelsLikeTemperature}°C</span>

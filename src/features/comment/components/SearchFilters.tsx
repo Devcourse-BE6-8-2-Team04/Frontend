@@ -2,15 +2,10 @@
 
 import React, { useState } from "react";
 import { Search, ChevronRight, MapPin, Thermometer, Calendar } from "lucide-react";
-
-interface SearchFilters {
-  location?: string;
-  feelsLikeTemperature?: number;
-  month?: number;
-}
+import { SearchFiltersType } from "../types";
 
 interface SearchFiltersProps {
-  onFiltersChange: (filters: SearchFilters) => void;
+  onFiltersChange: (filters: SearchFiltersType) => void;
 }
 
 export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
@@ -29,7 +24,7 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
   };
 
   const handleSearch = () => {
-    const newFilters: SearchFilters = {};
+    const newFilters: SearchFiltersType = {};
 
     if (tempInputs.location.trim()) {
       newFilters.location = tempInputs.location.trim();
@@ -73,7 +68,7 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
         />
       </button>
       <div className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}>
-        <div className="pt-4 space-y-4">
+        <div className="pt-4 space-y-4 px-1">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="relative">
               <MapPin size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />

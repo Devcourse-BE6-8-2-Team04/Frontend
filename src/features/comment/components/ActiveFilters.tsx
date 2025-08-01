@@ -2,22 +2,17 @@
 
 import React from "react";
 import { X, MapPin, Thermometer, Calendar } from "lucide-react";
-
-interface SearchFilters {
-  location?: string;
-  feelsLikeTemperature?: number;
-  month?: number;
-}
+import { SearchFiltersType } from "../types";
 
 interface ActiveFiltersProps {
-  filters: SearchFilters;
-  onFiltersChange: (filters: SearchFilters) => void;
+  filters: SearchFiltersType;
+  onFiltersChange: (filters: SearchFiltersType) => void;
 }
 
 export function ActiveFilters({ filters, onFiltersChange }: ActiveFiltersProps) {
   const hasActiveFilters = Object.keys(filters).length > 0;
 
-  const onRemoveFilter = (filterKey: keyof SearchFilters) => {
+  const onRemoveFilter = (filterKey: keyof SearchFiltersType) => {
     const newFilters = { ...filters };
     delete newFilters[filterKey];
     onFiltersChange(newFilters);

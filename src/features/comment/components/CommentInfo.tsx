@@ -5,6 +5,7 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import { CommentHeader } from "./CommentHeader";
 import { CommentCard } from "./CommentCard";
 import PasswordModal from "../modals/PasswordModal";
+import ConfirmModal from "../modals/ConfirmModal";
 
 interface CommentInfoProps {
   commentState: ReturnType<typeof useComment>;
@@ -14,29 +15,36 @@ export function CommentInfo({ commentState }: CommentInfoProps) {
   const router = useRouter();
   const { comment, deleteComment, verifyPassword } = commentState;
   const [showPwModal, setShowPwModal] = useState<"delete" | "edit" | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (comment == null) {
     return <LoadingSpinner />;
   }
 
   const executeDelete = () => {
-    if (!confirm(`${comment.id}번 글을 정말 삭제하시겠습니까?`)) return;
     deleteComment(() => router.back());
+    setShowConfirmModal(false);
   };
 
   const handlePasswordVerify = async (pw: string) => {
-    if (showPwModal === "delete") {
-      const isValid = await verifyPassword(pw);
-      if (isValid) {
-        setShowPwModal(null);
-        setTimeout(() => executeDelete(), 10);
+    try {
+      if (showPwModal === "delete") {
+        const isValid = await verifyPassword(pw);
+        if (isValid) {
+          setShowPwModal(null);
+          setTimeout(() => setShowConfirmModal(true), 10);
+        }
+      } else {
+        const isValid = await verifyPassword(pw);
+        if (isValid) {
+          setShowPwModal(null);
+          // router.push(`/comments/edit/${id}`);
+        }
       }
-    } else {
-      const isValid = await verifyPassword(pw);
-      if (isValid) {
-        setShowPwModal(null);
-        // router.push(`/comments/edit/${id}`);
-      }
+    } catch (err: any) {
+      setErrorMsg(err.message);
+      setTimeout(() => setErrorMsg(null), 3000);
     }
   };
 
@@ -56,6 +64,20 @@ export function CommentInfo({ commentState }: CommentInfoProps) {
           onClose={() => setShowPwModal(null)}
           onVerify={handlePasswordVerify}
         />
+      )}
+
+      {showConfirmModal && (
+        <ConfirmModal
+          message={`${comment.id}번 글을 정말 삭제하시겠습니까?`}
+          onConfirm={executeDelete}
+          onCancel={() => setShowConfirmModal(false)}
+        />
+      )}
+
+      {errorMsg && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-[9999] animate-fade-in-out">
+          {errorMsg}
+        </div>
       )}
     </div>
   );
