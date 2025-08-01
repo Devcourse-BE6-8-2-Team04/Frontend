@@ -194,7 +194,7 @@ export default function WeeklyForecastSwiper() {
         className="w-screen min-h-screen"
       >
         {/* 각 날짜별 날씨 슬라이드 */}
-        {weatherData.map((day, idx) => {
+        {weatherData.map((day) => {
           const theme = weatherThemeMap[day.weather] ?? weatherThemeMap.DEFAULT;
           const isCurrent = locationSource === "current";
 
@@ -205,6 +205,9 @@ export default function WeeklyForecastSwiper() {
                 className="min-h-screen bg-cover bg-center"
                 style={{ backgroundImage: `url(${theme.backgroundImage})` }}
               >
+                {/* 어두운 반투명 오버레이 */}
+                <div className="absolute inset-0 bg-black/10 z-0" />
+
                 {/* 날씨 정보 카드 컨테이너 */}
                 <div className="min-h-screen px-4 py-6 max-w-md mx-auto pt-10 bg-black/10">
                   <WeatherTodayCard
