@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, ChevronRight, MapPin, Thermometer, Calendar } from "lucide-react";
+import { Search, ChevronRight, MapPin, Thermometer, Calendar, Mail } from "lucide-react";
 import { SearchFiltersType } from "../types";
 
 interface SearchFiltersProps {
@@ -13,7 +13,8 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
   const [tempInputs, setTempInputs] = useState({
     location: "",
     feelsLikeTemperature: "",
-    month: ""
+    month: "",
+    email: ""
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -38,6 +39,9 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
         newFilters.month = monthNum;
       }
     }
+    if (tempInputs.email.trim()) {
+      newFilters.email = tempInputs.email.trim();
+    }
 
     onFiltersChange(newFilters);
     setIsExpanded(false);
@@ -47,7 +51,8 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
     setTempInputs({
       location: "",
       feelsLikeTemperature: "",
-      month: ""
+      month: "",
+      email: ""
     });
     onFiltersChange({});
   };
@@ -69,7 +74,7 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
       </button>
       <div className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}>
         <div className="pt-4 space-y-4 px-1">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div className="relative">
               <MapPin size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
@@ -78,6 +83,7 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
                 onChange={(e) => handleInputChange('location', e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="지역 검색"
+                onKeyDown={(e) => e.key === 'Enter' && tempInputs.location && handleSearch()}
               />
             </div>
             <div className="relative">
@@ -88,6 +94,7 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
                 onChange={(e) => handleInputChange('feelsLikeTemperature', e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="온도 (°C)"
+                onKeyDown={(e) => e.key === 'Enter' && tempInputs.feelsLikeTemperature && handleSearch()}
               />
             </div>
             <div className="relative">
@@ -100,6 +107,18 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
                 onChange={(e) => handleInputChange('month', e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="월 (1-12)"
+                onKeyDown={(e) => e.key === 'Enter' && tempInputs.month && handleSearch()}
+              />
+            </div>
+            <div className="relative">
+              <Mail size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="email"
+                value={tempInputs.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                placeholder="이메일 주소"
+                onKeyDown={(e) => e.key === 'Enter' && tempInputs.email && handleSearch()}
               />
             </div>
           </div>

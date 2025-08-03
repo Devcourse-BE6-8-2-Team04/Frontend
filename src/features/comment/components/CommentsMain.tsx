@@ -33,6 +33,7 @@ export default function CommentsMain() {
     if (searchFilters.location) params.append('location', searchFilters.location);
     if (searchFilters.feelsLikeTemperature !== undefined) params.append('feelsLikeTemperature', searchFilters.feelsLikeTemperature.toString());
     if (searchFilters.month !== undefined) params.append('month', searchFilters.month.toString());
+    if (searchFilters.email) params.append('email', searchFilters.email);
 
     apiFetch(`/api/v1/comments?${params}`).then((res) => {
       setComments(res.content || []);
