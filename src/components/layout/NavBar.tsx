@@ -17,7 +17,9 @@ export default function NavBar() {
           <Home className="w-6 h-6" />
         </Link>
         <ShoppingBag className="w-6 h-6" />
-        <Menu className="w-6 h-6" />
+        <Link href="/comments">
+          <Menu className="w-6 h-6" />
+        </Link>
       </nav>
     </>
   );
