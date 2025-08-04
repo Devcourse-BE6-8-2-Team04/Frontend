@@ -63,7 +63,7 @@ export default function WeatherTodayCard({
         </div>
 
         {/* 오른쪽: 날씨 캐릭터 이미지 */}
-        <div className="w-32 h-32 flex-shrink-0 flex items-end justify-center mt-2">
+        <div className="w-32 h-[180px] flex-shrink-0 flex items-end justify-center overflow-hidden">
           <Link href="/clothdetail">
             <WeatherCharacter src={characterImage} />
           </Link>
