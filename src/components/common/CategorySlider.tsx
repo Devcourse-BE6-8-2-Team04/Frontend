@@ -23,8 +23,8 @@ export default function CategorySlider({ groupedItems, categoryNameMap }: Catego
     slidesToShow: 1,
     slidesToScroll: 1,
     arrows: false,
-    centerMode: true,
-    centerPadding: "20px",
+    centerMode: false,
+    centerPadding: "0px",
   };
 
   return (
@@ -40,10 +40,10 @@ export default function CategorySlider({ groupedItems, categoryNameMap }: Catego
                 {items.map((item, idx) => (
                   <img
                     key={idx}
-                    // src={item.imageUrl}
-                    src={"https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcQK1dXQrVCbBvMdU4A83XdwM7Rtte8YFsWFI-y5JLABKyTRyUTBQko0SqyrqNJQf96aNdEqLNo5eZglqCIH2udWwuewokYR5-0QnjucNq4Y5Q"}
+                    src={item.imageUrl}
+                
                     alt={item.clothName}
-                    className="w-[121px] h-[141px] object-cover"
+                    className="w-[121px] h-[121px] object-cover"
                   />
                 ))}
               </div>

@@ -132,9 +132,14 @@ export default function Screen() {
             )}
 
             {/* 슬라이더 및 네비게이션 */}
-            <div className="absolute top-[367px] left-[-20px] w-full max-w-[390px] px-[41px] h-[375px] overflow-hidden">
+            <div
+              className="fixed top-[367px] left-0 w-screen h-[375px] z-10 flex justify-center overflow-hidden"
+              style={{ maxWidth: "390px", margin: "0 auto", left: "50%", transform: "translateX(-50%)" }}
+            >
               <CategorySlider groupedItems={groupedByCategory} categoryNameMap={categoryNameMap} />
             </div>
+
+
 
 
             <Nav />
