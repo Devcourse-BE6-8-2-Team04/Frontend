@@ -6,12 +6,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, PenTool } from "lucide-react";
 import { apiFetch } from "@/lib/backend/client";
+import type { components } from "@/lib/backend/apiV1/schema";
+
+type CommentDto = components["schemas"]["CommentDto"];
 
 export default function CreateCommentPage() {
     const router = useRouter();
 
-    // 댓글 작성에 필요한 모든 폼 데이터를 관리합니다
-    // 백엔드 API 스키마에 맞춰 구성되어 있습니다
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -19,23 +20,20 @@ export default function CreateCommentPage() {
         sentence: "",
         tagString: "",
         imageUrl: "",
-        countryCode: "KR", // 기본값으로 한국 설정
+        countryCode: "KR",
         cityName: "",
-        date: new Date().toISOString().split('T')[0] // 오늘 날짜를 기본값으로 설정
+        date: new Date().toISOString().split('T')[0]
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<{[key: string]: string}>({});
 
-    // 입력 필드 값이 변경될 때 호출되는 함수입니다
-    // 사용자가 타이핑할 때마다 상태를 업데이트하고, 기존 에러 메시지를 제거합니다
     const handleChange = (field: string, value: string) => {
         setFormData(prev => ({
             ...prev,
             [field]: value
         }));
 
-        // 사용자가 수정을 시작하면 해당 필드의 에러를 제거하여 즉각적인 피드백을 제공합니다
         if (errors[field]) {
             setErrors(prev => ({
                 ...prev,
@@ -44,26 +42,21 @@ export default function CreateCommentPage() {
         }
     };
 
-    // 폼 제출 전에 모든 필수 필드를 검증하는 함수입니다
-    // 백엔드 validation 규칙과 일치하도록 구성되어 있습니다
     const validateForm = () => {
         const newErrors: {[key: string]: string} = {};
 
-        // 이메일 검증: 필수 필드이며 올바른 이메일 형식이어야 합니다
         if (!formData.email.trim()) {
             newErrors.email = "이메일을 입력해주세요.";
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
             newErrors.email = "올바른 이메일 형식을 입력해주세요.";
         }
 
-        // 비밀번호 검증: 최소 4자 이상이어야 합니다 (백엔드 @Size 규칙에 맞춤)
         if (!formData.password.trim()) {
             newErrors.password = "비밀번호를 입력해주세요.";
         } else if (formData.password.length < 4) {
             newErrors.password = "비밀번호는 최소 4자 이상이어야 합니다.";
         }
 
-        // 제목 검증: 최소 2자, 최대 100자 (백엔드 @Size 규칙에 맞춤)
         if (!formData.title.trim()) {
             newErrors.title = "제목을 입력해주세요.";
         } else if (formData.title.length < 2) {
@@ -72,7 +65,6 @@ export default function CreateCommentPage() {
             newErrors.title = "제목은 100자 이하여야 합니다.";
         }
 
-        // 내용 검증: 최소 2자, 최대 500자 (백엔드 @Size 규칙에 맞춤)
         if (!formData.sentence.trim()) {
             newErrors.sentence = "내용을 입력해주세요.";
         } else if (formData.sentence.length < 2) {
@@ -81,12 +73,10 @@ export default function CreateCommentPage() {
             newErrors.sentence = "내용은 500자 이하여야 합니다.";
         }
 
-        // 도시명 검증: 백엔드에서 위치 정보로 사용되므로 필수입니다
         if (!formData.cityName.trim()) {
             newErrors.cityName = "도시명을 입력해주세요.";
         }
 
-        // 날짜 검증: 필수 필드입니다
         if (!formData.date) {
             newErrors.date = "날짜를 선택해주세요.";
         }
@@ -95,8 +85,6 @@ export default function CreateCommentPage() {
         return Object.keys(newErrors).length === 0;
     };
 
-    // 실제 댓글을 생성하는 함수입니다
-    // 기존 CommentsMain에서 사용하던 apiFetch를 그대로 사용합니다
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -107,20 +95,14 @@ export default function CreateCommentPage() {
         setIsSubmitting(true);
 
         try {
-            // 백엔드 API 엔드포인트에 댓글 데이터를 전송합니다
-            // 기존 Modal에서 사용하던 것과 동일한 방식입니다
             const response = await apiFetch('/api/v1/comments', {
                 method: 'POST',
                 body: JSON.stringify(formData),
             });
 
-            // 성공적으로 댓글이 생성되면 댓글 목록 페이지로 이동합니다
-            // 이는 사용자에게 자연스러운 플로우를 제공합니다
             router.push('/comments');
 
         } catch (error: any) {
-            // 에러가 발생하면 사용자에게 알립니다
-            // 실제 운영 환경에서는 더 세밀한 에러 처리가 필요할 수 있습니다
             alert(error.msg || '댓글 작성에 실패했습니다.');
         } finally {
             setIsSubmitting(false);
@@ -129,11 +111,10 @@ export default function CreateCommentPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 pb-[73px]">
-            {/* 헤더 부분 - 기존 CommentsHeader와 동일한 스타일을 사용합니다 */}
+            {/* 헤더 - 기존 CommentsHeader와 동일한 스타일 */}
             <div className="bg-white shadow-sm sticky top-0 z-40">
                 <div className="p-4">
                     <div className="flex items-center relative">
-                        {/* 뒤로가기 버튼 - 사용자가 언제든 이전 페이지로 돌아갈 수 있도록 합니다 */}
                         <button
                             onClick={() => router.back()}
                             className="p-2 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
@@ -141,12 +122,10 @@ export default function CreateCommentPage() {
                             <ChevronLeft size={20} className="text-gray-600" />
                         </button>
 
-                        {/* 브랜드 제목 - 기존 디자인과 일관성을 유지합니다 */}
                         <Link href="/comments" className="absolute left-1/2 transform -translate-x-1/2 text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-800 to-purple-800 bg-clip-text text-transparent">
                             WearLog
                         </Link>
 
-                        {/* 작성 아이콘 - 현재 상태를 시각적으로 표현합니다 */}
                         <div className="ml-auto">
                             <PenTool size={20} className="text-indigo-500" />
                         </div>
@@ -154,20 +133,18 @@ export default function CreateCommentPage() {
                 </div>
             </div>
 
-            {/* 메인 콘텐츠 영역 */}
+            {/* 메인 콘텐츠 */}
             <div className="px-4 py-6 max-w-4xl mx-auto">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
-                    {/* 페이지 제목 섹션 */}
                     <div className="p-6 border-b border-gray-100">
                         <h1 className="text-2xl font-bold text-gray-900">새 댓글 작성</h1>
                         <p className="text-gray-600 mt-2">커뮤니티와 경험을 공유해보세요</p>
                     </div>
 
-                    {/* 댓글 작성 폼 - 기존 Modal보다 훨씬 더 넓은 공간을 활용합니다 */}
                     <form onSubmit={handleSubmit} className="p-6 space-y-6">
 
-                        {/* 기본 정보 입력 섹션 */}
+                        {/* 기본 정보 */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -206,7 +183,7 @@ export default function CreateCommentPage() {
                             </div>
                         </div>
 
-                        {/* 제목 입력 */}
+                        {/* 제목 */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                                 제목 <span className="text-red-500">*</span>
@@ -225,7 +202,7 @@ export default function CreateCommentPage() {
                             )}
                         </div>
 
-                        {/* 내용 입력 - 텍스트에리어로 충분한 공간을 제공합니다 */}
+                        {/* 내용 */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                                 내용 <span className="text-red-500">*</span>
@@ -244,7 +221,7 @@ export default function CreateCommentPage() {
                             )}
                         </div>
 
-                        {/* 추가 정보 입력 섹션 */}
+                        {/* 추가 정보 */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -273,7 +250,7 @@ export default function CreateCommentPage() {
                             </div>
                         </div>
 
-                        {/* 위치 및 날짜 정보 입력 섹션 */}
+                        {/* 위치 및 날짜 */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -327,7 +304,7 @@ export default function CreateCommentPage() {
                             </div>
                         </div>
 
-                        {/* 액션 버튼들 - 취소와 작성 버튼을 제공합니다 */}
+                        {/* 버튼들 */}
                         <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-100">
                             <button
                                 type="button"
