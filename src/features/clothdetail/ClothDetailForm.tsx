@@ -1,6 +1,8 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import Card from "@/components/common/Card";
+import { BACKGROUNDS, weatherBackgroundMap } from "@/features/weather/utils/weatherBackgroundMap";
+import { getBackgroundImage } from "@/features/weather/utils/weatherBackgroundMap"; 
 import BackgroundLayout from "@/components/layout/BackgroundLayout";
 import {
   Sun,
@@ -38,6 +40,14 @@ function getWeatherIconByCode(code: number) {
 export default function Screen() {
   const { weatherData, clothingItems, extraClothingItems } = useClothDetailData();
 
+  useEffect(() => {
+    if (weatherData) {
+      console.log("weather:", weatherData.weather);
+console.log("mapped key:", weatherBackgroundMap[weatherData.weather]);
+console.log("background path:", BACKGROUNDS[weatherBackgroundMap[weatherData.weather] ?? 'DEFAULT']);
+    }
+  }, [weatherData]);
+
   const groupedByCategory: Record<
     string,
     { clothName: string; imageUrl: string; category: string }[]
@@ -65,17 +75,13 @@ export default function Screen() {
     DATE_LOOK: "데이트룩",
   };
 
+
+  
   return (
     <div className="flex justify-center w-full min-h-screen bg-gray-100">
-      <BackgroundLayout backgroundImage="/comments/comment/img/shine_background.png">
+      <BackgroundLayout backgroundImage={BACKGROUNDS[weatherBackgroundMap[weatherData.weather] ?? 'DEFAULT']}>
         <div className="bg-[#97d2e8] w-[390px] h-[844px]">
           <div className="relative h-[844px]">
-            <img
-              src="/shine_background.png"
-              className="absolute w-[390px] h-[818px] top-0 left-0 object-cover"
-              alt="Sky background"
-            />
-
             {weatherData && (
               <>
                 {/* 도시명 */}
