@@ -13,7 +13,7 @@ export function Header({ onCreateClick }: HeaderProps) {
     <div className="bg-white shadow-sm sticky top-0 z-40">
         <div className="p-4">
           <div className="flex relative items-center">
-            <Link href="/comments" className="absolute left-1/2 transform -translate-x-1/2 text-xl md:text-2xl font-bold bg-gradient-to-r text-blue-900">
+            <Link href="/comments" className="absolute left-1/2 transform -translate-x-1/2 text-xl md:text-2xl font-bold text-blue-900">
               WearLog
             </Link>
             <div className="ml-auto">
