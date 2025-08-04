@@ -1,20 +1,17 @@
+// src/app/comments/create/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch } from "@/lib/backend/client";
-import type { components } from "@/lib/backend/apiV1/schema";
 import Link from "next/link";
-
-type GeoLocationDto = components["schemas"]["GeoLocationDto"];
+import { ChevronLeft, PenTool } from "lucide-react";
+import { apiFetch } from "@/lib/backend/client";
 
 export default function CreateCommentPage() {
     const router = useRouter();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [searchResults, setSearchResults] = useState<GeoLocationDto[]>([]);
-    const [showLocationResults, setShowLocationResults] = useState(false);
 
-    // 폼 데이터 상태
+    // 댓글 작성에 필요한 모든 폼 데이터를 관리합니다
+    // 백엔드 API 스키마에 맞춰 구성되어 있습니다
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -22,271 +19,338 @@ export default function CreateCommentPage() {
         sentence: "",
         tagString: "",
         imageUrl: "",
+        countryCode: "KR", // 기본값으로 한국 설정
         cityName: "",
-        countryCode: "",
-        date: new Date().toISOString().split('T')[0], // 오늘 날짜로 기본값
+        date: new Date().toISOString().split('T')[0] // 오늘 날짜를 기본값으로 설정
     });
 
-    // 입력값 변경 핸들러
-    const handleInputChange = (field: string, value: string) => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errors, setErrors] = useState<{[key: string]: string}>({});
+
+    // 입력 필드 값이 변경될 때 호출되는 함수입니다
+    // 사용자가 타이핑할 때마다 상태를 업데이트하고, 기존 에러 메시지를 제거합니다
+    const handleChange = (field: string, value: string) => {
         setFormData(prev => ({
             ...prev,
             [field]: value
         }));
-    };
 
-    // 도시 검색 함수
-    const searchCities = async (query: string) => {
-        if (!query.trim()) {
-            setSearchResults([]);
-            setShowLocationResults(false);
-            return;
-        }
-
-        try {
-            const results = await apiFetch(`/api/v1/geos?location=${encodeURIComponent(query)}`);
-            setSearchResults(results);
-            setShowLocationResults(true);
-        } catch (error) {
-            console.error("도시 검색 실패:", error);
-            setSearchResults([]);
+        // 사용자가 수정을 시작하면 해당 필드의 에러를 제거하여 즉각적인 피드백을 제공합니다
+        if (errors[field]) {
+            setErrors(prev => ({
+                ...prev,
+                [field]: ""
+            }));
         }
     };
 
-    // 도시 선택 핸들러
-    const handleCitySelect = (location: GeoLocationDto) => {
-        setFormData(prev => ({
-            ...prev,
-            cityName: location.name,
-            countryCode: location.country
-        }));
-        setShowLocationResults(false);
-        setSearchResults([]);
+    // 폼 제출 전에 모든 필수 필드를 검증하는 함수입니다
+    // 백엔드 validation 규칙과 일치하도록 구성되어 있습니다
+    const validateForm = () => {
+        const newErrors: {[key: string]: string} = {};
+
+        // 이메일 검증: 필수 필드이며 올바른 이메일 형식이어야 합니다
+        if (!formData.email.trim()) {
+            newErrors.email = "이메일을 입력해주세요.";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = "올바른 이메일 형식을 입력해주세요.";
+        }
+
+        // 비밀번호 검증: 최소 4자 이상이어야 합니다 (백엔드 @Size 규칙에 맞춤)
+        if (!formData.password.trim()) {
+            newErrors.password = "비밀번호를 입력해주세요.";
+        } else if (formData.password.length < 4) {
+            newErrors.password = "비밀번호는 최소 4자 이상이어야 합니다.";
+        }
+
+        // 제목 검증: 최소 2자, 최대 100자 (백엔드 @Size 규칙에 맞춤)
+        if (!formData.title.trim()) {
+            newErrors.title = "제목을 입력해주세요.";
+        } else if (formData.title.length < 2) {
+            newErrors.title = "제목은 최소 2자 이상이어야 합니다.";
+        } else if (formData.title.length > 100) {
+            newErrors.title = "제목은 100자 이하여야 합니다.";
+        }
+
+        // 내용 검증: 최소 2자, 최대 500자 (백엔드 @Size 규칙에 맞춤)
+        if (!formData.sentence.trim()) {
+            newErrors.sentence = "내용을 입력해주세요.";
+        } else if (formData.sentence.length < 2) {
+            newErrors.sentence = "내용은 최소 2자 이상이어야 합니다.";
+        } else if (formData.sentence.length > 500) {
+            newErrors.sentence = "내용은 500자 이하여야 합니다.";
+        }
+
+        // 도시명 검증: 백엔드에서 위치 정보로 사용되므로 필수입니다
+        if (!formData.cityName.trim()) {
+            newErrors.cityName = "도시명을 입력해주세요.";
+        }
+
+        // 날짜 검증: 필수 필드입니다
+        if (!formData.date) {
+            newErrors.date = "날짜를 선택해주세요.";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
-    // 폼 제출 핸들러
+    // 실제 댓글을 생성하는 함수입니다
+    // 기존 CommentsMain에서 사용하던 apiFetch를 그대로 사용합니다
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // 필수 필드 검증
-        if (!formData.email || !formData.password || !formData.title ||
-            !formData.sentence || !formData.cityName || !formData.countryCode) {
-            alert("필수 항목을 모두 입력해주세요.");
+        if (!validateForm()) {
             return;
         }
 
-        // 이메일 형식 검증
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(formData.email)) {
-            alert("올바른 이메일 형식을 입력해주세요.");
-            return;
-        }
-
-        // 비밀번호 길이 검증
-        if (formData.password.length < 4) {
-            alert("비밀번호는 4자 이상이어야 합니다.");
-            return;
-        }
+        setIsSubmitting(true);
 
         try {
-            setIsSubmitting(true);
-
-            await apiFetch("/api/v1/comments", {
-                method: "POST",
+            // 백엔드 API 엔드포인트에 댓글 데이터를 전송합니다
+            // 기존 Modal에서 사용하던 것과 동일한 방식입니다
+            const response = await apiFetch('/api/v1/comments', {
+                method: 'POST',
                 body: JSON.stringify(formData),
             });
 
-            alert("코멘트가 성공적으로 작성되었습니다!");
-            router.push("/comments");
+            // 성공적으로 댓글이 생성되면 댓글 목록 페이지로 이동합니다
+            // 이는 사용자에게 자연스러운 플로우를 제공합니다
+            router.push('/comments');
+
         } catch (error: any) {
-            console.error("코멘트 작성 실패:", error);
-            alert(error.msg || "코멘트 작성에 실패했습니다.");
+            // 에러가 발생하면 사용자에게 알립니다
+            // 실제 운영 환경에서는 더 세밀한 에러 처리가 필요할 수 있습니다
+            alert(error.msg || '댓글 작성에 실패했습니다.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 p-8">
-            <div className="max-w-2xl mx-auto">
-                {/* 헤더 */}
-                <div className="flex justify-between items-center mb-6">
-                    <Link href="/comments" className="text-3xl font-bold text-gray-800">
-                        WearLog
-                    </Link>
-                    <Link
-                        href="/comments"
-                        className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-                    >
-                        목록으로
-                    </Link>
+        <div className="min-h-screen bg-gray-50 pb-[73px]">
+            {/* 헤더 부분 - 기존 CommentsHeader와 동일한 스타일을 사용합니다 */}
+            <div className="bg-white shadow-sm sticky top-0 z-40">
+                <div className="p-4">
+                    <div className="flex items-center relative">
+                        {/* 뒤로가기 버튼 - 사용자가 언제든 이전 페이지로 돌아갈 수 있도록 합니다 */}
+                        <button
+                            onClick={() => router.back()}
+                            className="p-2 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+                        >
+                            <ChevronLeft size={20} className="text-gray-600" />
+                        </button>
+
+                        {/* 브랜드 제목 - 기존 디자인과 일관성을 유지합니다 */}
+                        <Link href="/comments" className="absolute left-1/2 transform -translate-x-1/2 text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-800 to-purple-800 bg-clip-text text-transparent">
+                            WearLog
+                        </Link>
+
+                        {/* 작성 아이콘 - 현재 상태를 시각적으로 표현합니다 */}
+                        <div className="ml-auto">
+                            <PenTool size={20} className="text-indigo-500" />
+                        </div>
+                    </div>
                 </div>
+            </div>
 
-                {/* 코멘트 작성 폼 */}
-                <div className="bg-white rounded-lg shadow-md p-6">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">코멘트 작성</h2>
+            {/* 메인 콘텐츠 영역 */}
+            <div className="px-4 py-6 max-w-4xl mx-auto">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        {/* 이메일 */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                이메일 *
-                            </label>
-                            <input
-                                type="email"
-                                value={formData.email}
-                                onChange={(e) => handleInputChange('email', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="example@email.com"
-                                required
-                            />
+                    {/* 페이지 제목 섹션 */}
+                    <div className="p-6 border-b border-gray-100">
+                        <h1 className="text-2xl font-bold text-gray-900">새 댓글 작성</h1>
+                        <p className="text-gray-600 mt-2">커뮤니티와 경험을 공유해보세요</p>
+                    </div>
+
+                    {/* 댓글 작성 폼 - 기존 Modal보다 훨씬 더 넓은 공간을 활용합니다 */}
+                    <form onSubmit={handleSubmit} className="p-6 space-y-6">
+
+                        {/* 기본 정보 입력 섹션 */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    이메일 <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={(e) => handleChange('email', e.target.value)}
+                                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                                        errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                    }`}
+                                    placeholder="your.email@example.com"
+                                />
+                                {errors.email && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    비밀번호 <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="password"
+                                    value={formData.password}
+                                    onChange={(e) => handleChange('password', e.target.value)}
+                                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                                        errors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                    }`}
+                                    placeholder="수정/삭제시 사용됩니다"
+                                />
+                                {errors.password && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                                )}
+                            </div>
                         </div>
 
-                        {/* 비밀번호 */}
+                        {/* 제목 입력 */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                비밀번호 *
-                            </label>
-                            <input
-                                type="password"
-                                value={formData.password}
-                                onChange={(e) => handleInputChange('password', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="4자 이상 입력"
-                                minLength={4}
-                                required
-                            />
-                        </div>
-
-                        {/* 제목 */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                제목 *
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                제목 <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 value={formData.title}
-                                onChange={(e) => handleInputChange('title', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="제목을 입력하세요"
-                                minLength={2}
-                                maxLength={100}
-                                required
+                                onChange={(e) => handleChange('title', e.target.value)}
+                                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                                    errors.title ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                }`}
+                                placeholder="댓글 제목을 입력하세요"
                             />
-                        </div>
-
-                        {/* 내용 */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                내용 *
-                            </label>
-                            <textarea
-                                value={formData.sentence}
-                                onChange={(e) => handleInputChange('sentence', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="내용을 입력하세요"
-                                rows={6}
-                                minLength={2}
-                                maxLength={500}
-                                required
-                            />
-                        </div>
-
-                        {/* 태그 */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                태그
-                            </label>
-                            <input
-                                type="text"
-                                value={formData.tagString}
-                                onChange={(e) => handleInputChange('tagString', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="#태그1#태그2 형식으로 입력"
-                            />
-                        </div>
-
-                        {/* 이미지 URL */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                이미지 URL
-                            </label>
-                            <input
-                                type="url"
-                                value={formData.imageUrl}
-                                onChange={(e) => handleInputChange('imageUrl', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="https://example.com/image.jpg"
-                            />
-                        </div>
-
-                        {/* 도시 검색 */}
-                        <div className="relative">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                도시 *
-                            </label>
-                            <input
-                                type="text"
-                                value={formData.cityName}
-                                onChange={(e) => {
-                                    handleInputChange('cityName', e.target.value);
-                                    searchCities(e.target.value);
-                                }}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="도시명을 입력하세요"
-                                required
-                            />
-
-                            {/* 도시 검색 결과 */}
-                            {showLocationResults && searchResults.length > 0 && (
-                                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                    {searchResults.map((location, index) => (
-                                        <div
-                                            key={index}
-                                            onClick={() => handleCitySelect(location)}
-                                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
-                                        >
-                                            <div className="font-medium">
-                                                {location.localName || location.name}
-                                            </div>
-                                            <div className="text-sm text-gray-500">
-                                                {location.name}, {location.country}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                            {errors.title && (
+                                <p className="mt-1 text-sm text-red-600">{errors.title}</p>
                             )}
                         </div>
 
-                        {/* 날짜 */}
+                        {/* 내용 입력 - 텍스트에리어로 충분한 공간을 제공합니다 */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                날짜 *
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                내용 <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type="date"
-                                value={formData.date}
-                                onChange={(e) => handleInputChange('date', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required
+                            <textarea
+                                value={formData.sentence}
+                                onChange={(e) => handleChange('sentence', e.target.value)}
+                                rows={6}
+                                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none ${
+                                    errors.sentence ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                }`}
+                                placeholder="댓글 내용을 자세히 입력해주세요..."
                             />
+                            {errors.sentence && (
+                                <p className="mt-1 text-sm text-red-600">{errors.sentence}</p>
+                            )}
                         </div>
 
-                        {/* 제출 버튼 */}
-                        <div className="flex gap-3 pt-4">
+                        {/* 추가 정보 입력 섹션 */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    태그
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.tagString}
+                                    onChange={(e) => handleChange('tagString', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    placeholder="#날씨 #여행 #옷차림"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    이미지 URL
+                                </label>
+                                <input
+                                    type="url"
+                                    value={formData.imageUrl}
+                                    onChange={(e) => handleChange('imageUrl', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    placeholder="https://example.com/image.jpg"
+                                />
+                            </div>
+                        </div>
+
+                        {/* 위치 및 날짜 정보 입력 섹션 */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    국가 코드
+                                </label>
+                                <select
+                                    value={formData.countryCode}
+                                    onChange={(e) => handleChange('countryCode', e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                >
+                                    <option value="KR">대한민국 (KR)</option>
+                                    <option value="US">미국 (US)</option>
+                                    <option value="JP">일본 (JP)</option>
+                                    <option value="CN">중국 (CN)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    도시명 <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.cityName}
+                                    onChange={(e) => handleChange('cityName', e.target.value)}
+                                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                                        errors.cityName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                    }`}
+                                    placeholder="서울"
+                                />
+                                {errors.cityName && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.cityName}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    날짜 <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="date"
+                                    value={formData.date}
+                                    onChange={(e) => handleChange('date', e.target.value)}
+                                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                                        errors.date ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                    }`}
+                                />
+                                {errors.date && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.date}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* 액션 버튼들 - 취소와 작성 버튼을 제공합니다 */}
+                        <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-100">
                             <button
                                 type="button"
-                                onClick={() => router.push("/comments")}
-                                className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                                onClick={() => router.back()}
+                                className="order-2 sm:order-1 w-full sm:w-auto px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all duration-200"
+                                disabled={isSubmitting}
                             >
                                 취소
                             </button>
+
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="order-1 sm:order-2 sm:ml-auto w-full sm:w-auto px-8 py-3 text-white bg-indigo-500 rounded-xl hover:bg-indigo-600 transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                             >
-                                {isSubmitting ? "작성 중..." : "작성하기"}
+                                {isSubmitting ? (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        작성 중...
+                                    </div>
+                                ) : (
+                                    '댓글 작성'
+                                )}
                             </button>
                         </div>
                     </form>
