@@ -79,7 +79,13 @@ console.log("background path:", BACKGROUNDS[weatherBackgroundMap[weatherData.wea
   
   return (
     <div className="flex justify-center w-full min-h-screen bg-gray-100">
-      <BackgroundLayout backgroundImage={BACKGROUNDS[weatherBackgroundMap[weatherData.weather] ?? 'DEFAULT']}>
+      <BackgroundLayout 
+        backgroundImage={
+          weatherData 
+            ? BACKGROUNDS[weatherBackgroundMap[weatherData.weather] ?? 'DEFAULT'] 
+            : undefined
+        }
+      >
         <div className="bg-[#97d2e8] w-[390px] h-[844px]">
           <div className="relative h-[844px]">
             {weatherData && (
