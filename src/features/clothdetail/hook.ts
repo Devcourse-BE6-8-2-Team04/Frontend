@@ -1,20 +1,47 @@
+import { useEffect, useState } from "react";
+import { fetchClothDetails, ClothItem, ExtraCloth, WeatherInfo } from "./api";
+
 export function useClothDetailData() {
-  const weatherData = {
-    city: "수원시",
-    condition: "맑음",
-    currentTemp: "23",
-    maxTemp: "26",
-    minTemp: "18",
-  };
+  const [weatherData, setWeatherData] = useState<WeatherInfo | null>(null);
+  const [clothingItems, setClothingItems] = useState<ClothItem[]>([]);
+  const [extraClothingItems, setExtraClothingItems] = useState<ExtraCloth[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const clothingItems = [
-    { clothName: "셔츠", imageUrl: "/shirt.png", category: "OUTDOOR" },
-    { clothName: "바지", imageUrl: "/pants.png", category: "OUTDOOR" },
-    { clothName: "코트", imageUrl: "/coat.png", category: "DATE_LOOK" },
-    { clothName: "청바지", imageUrl: "/jeans.png", category: "DATE_LOOK" },
-    { clothName: "자켓", imageUrl: "/jacket.png", category: "FORMAL_OFFICE" },
-    { clothName: "구두", imageUrl: "/shoes.png", category: "FORMAL_OFFICE" },
-  ];
+  useEffect(() => {
+    function fetchData(latitude: number, longitude: number) {
+      fetchClothDetails(latitude, longitude)
+        .then((data) => {
+          setWeatherData(data.weatherData);
+          setClothingItems(data.clothingItems);
+          setExtraClothingItems(data.extraClothingItems);
+          setLoading(false);
+        })
+        .catch((err) => {
+          setError(err.message || "Failed to load data");
+          setLoading(false);
+        });
+    }
 
-  return { weatherData, clothingItems };
+    if (!navigator.geolocation) {
+      console.warn("Geolocation not supported. Using fallback location.");
+      fetchData(37.5665, 126.9780);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        console.log("✅ 위치 정보:", lat, lon);
+        fetchData(lat, lon);
+      },
+      (err) => {
+        console.warn("❌ 위치 에러, fallback 사용:", err);
+        fetchData(37.5665, 126.9780);
+      }
+    );
+  }, []);
+
+  return { weatherData, clothingItems, extraClothingItems, loading, error };
 }

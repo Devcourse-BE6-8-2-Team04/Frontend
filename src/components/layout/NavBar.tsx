@@ -13,10 +13,15 @@ export default function NavBar() {
         <Link href="/plan">
           <Search className="w-6 h-6" />
         </Link>
+
         <Link href="/">
           <Home className="w-6 h-6" />
         </Link>
-        <ShoppingBag className="w-6 h-6" />
+        
+        <Link href="/clothdetail">
+          <ShoppingBag className="w-6 h-6" />
+        </Link>
+        
         <Link href="/comments">
           <Menu className="w-6 h-6" />
         </Link>
