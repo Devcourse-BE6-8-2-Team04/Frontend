@@ -17,12 +17,15 @@ export default function NavBar() {
         <Link href="/">
           <Home className="w-6 h-6" />
         </Link>
+        
         <Link href="/clothdetail">
           <ShoppingBag className="w-6 h-6" />
         </Link>
-        <Menu className="w-6 h-6" />
+        
+        <Link href="/comments">
+          <Menu className="w-6 h-6" />
+        </Link>
       </nav>
     </>
-
   );
 }

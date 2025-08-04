@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { X, MapPin, Thermometer, Calendar } from "lucide-react";
+import { X, MapPin, Thermometer, Calendar, Mail } from "lucide-react";
 import { SearchFiltersType } from "../types";
 
 interface ActiveFiltersProps {
@@ -54,6 +54,18 @@ export function ActiveFilters({ filters, onFiltersChange }: ActiveFiltersProps) 
             <button
               onClick={() => onRemoveFilter('month')}
               className="hover:bg-green-200 rounded-full p-0.5"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        )}
+        {filters.email && (
+          <div className="flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+            <Mail size={14} />
+            <span>{filters.email}</span>
+            <button
+              onClick={() => onRemoveFilter('email')}
+              className="hover:bg-blue-200 rounded-full p-0.5"
             >
               <X size={12} />
             </button>
