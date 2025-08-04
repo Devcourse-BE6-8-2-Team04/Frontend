@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import Modal from "../modals/Modal";
 import { Header } from "./CommentsHeader";
@@ -16,8 +17,8 @@ import { SearchFiltersType } from "../types";
 type CommentDto = components["schemas"]["CommentDto"];
 
 export default function CommentsMain() {
+  const router = useRouter();
   const [comments, setComments] = useState<CommentDto[] | null>(null);
-  const [showModal, setShowModal] = useState(false);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
@@ -65,7 +66,7 @@ export default function CommentsMain() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-[73px]">
-      <Header onCreateClick={() => setShowModal(true)} />
+      <Header onCreateClick={() => router.push('/comments/create')} />
 
       <div className="px-4 py-6 max-w-4xl mx-auto">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
@@ -87,10 +88,6 @@ export default function CommentsMain() {
           onPageChange={setPage}
         />
       </div>
-
-      {showModal && (
-        <Modal onClose={() => setShowModal(false)} onCreate={handleCreate} />
-      )}
     </div>
   );
 }
