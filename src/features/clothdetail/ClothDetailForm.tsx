@@ -138,10 +138,6 @@ export default function Screen() {
             >
               <CategorySlider groupedItems={groupedByCategory} categoryNameMap={categoryNameMap} />
             </div>
-
-
-
-
             <Nav />
           </div>
         </div>

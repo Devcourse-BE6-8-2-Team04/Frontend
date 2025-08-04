@@ -1,21 +1,25 @@
-import Link from 'next/link';
-import { Search, Home, ShoppingBag, Menu } from 'lucide-react';
+import React from "react";
+import { Home, Search, ShoppingBag, Menu } from "lucide-react";
+import Link from "next/link";
 
 export default function NavBar() {
   return (
-    <div className="absolute w-[390px] h-[73px] bottom-0 left-0 bg-white flex justify-around items-center">
-      <Link href="/">
-        <Search className="w-6 h-6 cursor-pointer" />
-      </Link>
-      <Link href="/clothdetail">
-        <Home className="w-6 h-6 cursor-pointer" />
-      </Link>
-      <Link href="/clothdetail">
-        <ShoppingBag className="w-6 h-6 cursor-pointer" />
-      </Link>
-      <Link href="/plan">
-        <Menu className="w-6 h-6 cursor-pointer" />
-      </Link>
-    </div>
+    <>
+      {/* 배경 레이어 */}
+      <div className="fixed bottom-0 left-0 w-full h-[73px] bg-white z-0 shadow" />
+  
+      {/* 실제 네비게이션 바 */}
+      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md h-[73px] bg-white flex justify-between items-center px-10 z-10">
+        <Link href="/plan">
+          <Search className="w-6 h-6" />
+        </Link>
+        <Home className="w-6 h-6" />
+        <Link href="/clothdetail">
+          <ShoppingBag className="w-6 h-6" />
+        </Link>
+        <Menu className="w-6 h-6" />
+      </nav>
+    </>
+
   );
 }
