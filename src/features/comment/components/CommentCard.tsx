@@ -19,7 +19,7 @@ export function CommentCard({ comment }: CommentCardProps) {
         </h1>
             
         {/* Meta Info */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-4">
+        <div className="flex flex-row items-center justify-between gap-2 mt-4">
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <span className="truncate">{comment.email}</span>
           </div>
