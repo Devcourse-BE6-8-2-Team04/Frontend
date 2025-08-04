@@ -130,6 +130,18 @@ export default function PullToRevealSearch() {
   };
 
   /**
+   * 검색창 더블클릭 핸들러
+   */
+  const handleDoubleClick = () => {
+    if (showOverlay) {
+      closeOverlay();
+    } else {
+      setOffset(80);
+      setIsSearchVisible(true);
+    }
+  };
+
+  /**
    * 검색 실행 함수
    * 실제 API를 통해 지역 정보를 검색
    *
@@ -406,6 +418,7 @@ export default function PullToRevealSearch() {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onDoubleClick={handleDoubleClick}
       >
         {/* 검색 헤더 (고정 위치) */}
         <div className="h-[80px] bg-gray-800 text-white flex items-center justify-center px-4">
@@ -424,6 +437,12 @@ export default function PullToRevealSearch() {
               className="text-gray-300 hover:text-white disabled:opacity-50"
             >
               <Search size={20} />
+            </button>
+            <button
+              onClick={closeOverlay}
+              className="text-gray-300 hover:text-white"
+            >
+              <X size={20} />
             </button>
           </div>
         </div>

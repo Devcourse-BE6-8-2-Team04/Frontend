@@ -27,5 +27,5 @@ export default function WeatherCharacter({
   // 이미지 경로가 없으면 아무것도 렌더링하지 않음
   if (!src) return null;
 
-  return <img src={src} alt={alt} className="w-24 object-contain" />;
+  return <img src={src} alt={alt} className="h-full object-contain" />;
 }

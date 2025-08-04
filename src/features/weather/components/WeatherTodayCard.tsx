@@ -5,6 +5,7 @@ import { WeatherInfoDto } from "@/lib/backend/apiV1/weatherService";
 import WeatherCharacter from "./WeatherCharacter";
 import WeatherDetailCards from "./WeatherDetailCards";
 import { Navigation } from "lucide-react";
+import Link from "next/link";
 
 /**
  * 오늘 날씨 정보를 표시하는 메인 카드 컴포넌트
@@ -62,8 +63,10 @@ export default function WeatherTodayCard({
         </div>
 
         {/* 오른쪽: 날씨 캐릭터 이미지 */}
-        <div className="w-32 h-32 flex-shrink-0 flex items-end justify-center mt-2">
-          <WeatherCharacter src={characterImage} />
+        <div className="w-32 h-[180px] flex-shrink-0 flex items-end justify-center overflow-hidden">
+          <Link href="/clothdetail">
+            <WeatherCharacter src={characterImage} />
+          </Link>
         </div>
       </div>
 
