@@ -1,8 +1,19 @@
 "use client";
 
+
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, Thermometer, CalendarDays, Plus, Loader2, ImagePlus, ChevronLeft, Lock } from "lucide-react";
+import {
+    MapPin,
+    Thermometer,
+    CalendarDays,
+    Plus,
+    Loader2,
+    ImagePlus,
+    ChevronLeft,
+    Lock,
+    Mail,
+} from "lucide-react";
 
 const OPENWEATHER_API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
 
@@ -14,11 +25,13 @@ type CityCandidate = {
     lon: number;
 };
 
+
+
 export function CommentCreateForm() {
     const router = useRouter();
     const [title, setTitle] = useState("");
     const [email, setEmail] = useState("");
-    const [password, setPassword] = useState(""); // 비밀번호 추가
+    const [password, setPassword] = useState("");
     const [location, setLocation] = useState("");
     const [locationCandidates, setLocationCandidates] = useState<CityCandidate[]>([]);
     const [selectedCity, setSelectedCity] = useState<CityCandidate | null>(null);
@@ -33,11 +46,27 @@ export function CommentCreateForm() {
     const [isLoadingWeather, setIsLoadingWeather] = useState(false);
     const [weatherError, setWeatherError] = useState("");
     const [isLoadingCities, setIsLoadingCities] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // focus 관리
+    const emailRef = useRef<HTMLInputElement>(null);
+    const passwordRef = useRef<HTMLInputElement>(null);
+    const titleRef = useRef<HTMLInputElement>(null);
+
     useEffect(() => {
-        if (!location || selectedCity?.name === location) {
+        function handleTouchStart(event: TouchEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setShowDropdown(false);
+            }
+        }
+        document.addEventListener("touchstart", handleTouchStart);
+        return () => document.removeEventListener("touchstart", handleTouchStart);
+    }, []);
+
+    useEffect(() => {
+        if (!location) {
             setLocationCandidates([]);
             setShowDropdown(false);
             return;
@@ -51,9 +80,10 @@ export function CommentCreateForm() {
                     { signal: abortController.signal }
                 );
                 const data = await res.json();
+                console.log("자동완성 API 응답:", data);
                 setLocationCandidates(data);
                 setShowDropdown(data.length > 0);
-            } catch {
+            } catch (err) {
                 setLocationCandidates([]);
                 setShowDropdown(false);
             } finally {
@@ -94,14 +124,13 @@ export function CommentCreateForm() {
     }, [selectedCity, date]);
 
     useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setShowDropdown(false);
-            }
+        // 도시 자동완성 후보가 하나일 때 자동 선택
+        if (!selectedCity && locationCandidates.length === 1) {
+            setSelectedCity(locationCandidates[0]);
+            setLocation(`${locationCandidates[0].name}${locationCandidates[0].state ? `, ${locationCandidates[0].state}` : ""}, ${locationCandidates[0].country}`);
+            setShowDropdown(false);
         }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    }, [locationCandidates, selectedCity]);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -125,91 +154,152 @@ export function CommentCreateForm() {
         }
     };
     const handleTagRemove = (tag: string) => {
-        setTags(tags.filter(t => t !== tag));
+        setTags(tags.filter((t) => t !== tag));
     };
 
     const handleGoBack = () => {
         router.push("/comments");
     };
 
-    // 등록 기능은 나중에 구현
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            const formData = new FormData();
+            formData.append("title", title);
+            formData.append("email", email);
+            formData.append("password", password);
+            formData.append("location", location);
+            formData.append("feelsLikeTemperature", feelsLikeTemperature);
+            formData.append("month", month);
+            formData.append("date", date);
+            formData.append("content", content);
+            formData.append("tags", JSON.stringify(tags));
+            if (fileInputRef.current?.files?.[0]) {
+                formData.append("image", fileInputRef.current.files[0]);
+            }
+
+            const res = await fetch("/api/v1/comments", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(errText || "등록에 실패했습니다.");
+            }
+
+            router.push("/comments");
+        } catch (err: any) {
+            alert(err.message || "등록에 실패했습니다. 다시 시도해 주세요.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <form
-            className="bg-white rounded-2xl shadow-sm border border-gray-100 max-w-3xl mx-auto mt-10 p-8"
+            onSubmit={handleSubmit}
+            className="max-w-md mx-auto bg-white shadow-lg rounded-2xl p-4 mb-16"
+            style={{
+                minHeight: "100vh",
+                boxSizing: "border-box",
+            }}
         >
-            {/* 뒤로가기 버튼 */}
-            <div className="mb-6">
+            {/* 상단 네비 */}
+            <div className="flex items-center mb-4">
                 <button
                     type="button"
                     onClick={handleGoBack}
-                    className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 hover:shadow-md transition-all duration-150 transform hover:scale-105 active:scale-95"
+                    className="flex items-center gap-2 px-2 py-2 bg-white border border-gray-200 rounded-full text-gray-700 hover:bg-gray-100 transition-all duration-150"
                 >
-                    <ChevronLeft size={20} className="text-gray-600" />
-                    <span className="text-sm font-medium">뒤로가기</span>
+                    <ChevronLeft size={22} className="text-gray-600" />
                 </button>
+                <h2 className="ml-2 text-lg font-semibold text-gray-900">새 글 작성</h2>
             </div>
 
             {/* 제목 */}
-            <input
-                type="text"
-                placeholder="제목을 입력하세요"
-                className="w-full font-semibold text-xl md:text-2xl border-b border-gray-300 mb-4 py-2 focus:outline-none text-gray-900 bg-transparent placeholder-gray-400"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                required
-            />
-
-            {/* 이메일 및 비밀번호, 날짜 */}
-            <div className="flex items-center justify-between mb-2 gap-2">
+            <div className="mb-4">
                 <input
-                    type="email"
-                    placeholder="이메일"
-                    className="text-sm text-gray-800 font-mono py-1 focus:outline-none bg-gray-50 px-2 rounded-lg border border-gray-200"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
+                    ref={titleRef}
+                    type="text"
+                    placeholder="제목"
+                    className="w-full text-base font-bold py-3 px-4 rounded-lg border border-gray-200 bg-gray-50 focus:outline-none focus:border-blue-400 placeholder-gray-400 focus:placeholder-blue-400 focus:bg-white transition-all duration-150"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
                     required
-                />
-                <div className="flex items-center gap-2">
-                    <Lock size={16} className="text-gray-400" />
-                    <input
-                        type="password"
-                        placeholder="비밀번호"
-                        className="text-sm text-gray-800 py-1 px-2 rounded-lg bg-gray-50 focus:outline-none border border-gray-200"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        required
-                        autoComplete="new-password"
-                    />
-                </div>
-                <input
-                    type="date"
-                    className="text-sm text-gray-800 py-1 px-2 rounded-lg bg-gray-50 focus:outline-none border border-gray-200"
-                    value={date}
-                    onChange={e => setDate(e.target.value)}
-                    required
+                    style={{ color: "#222" }}
                 />
             </div>
 
-            {/* 날씨 정보 */}
-            <div className="flex gap-2 mb-4 items-center">
-                <div className="relative w-52" ref={dropdownRef}>
-                    <div className="flex items-center gap-1 bg-gray-20 text-gray-800 px-2 py-1 rounded-lg border border-gray-200">
-                        <MapPin size={16} />
+            {/* PC/모바일 조건부 layout */}
+            <div className="mb-4">
+                <div className="flex flex-col md:flex-row gap-2">
+                    {/* 이메일 */}
+                    <div className="flex items-center flex-1 bg-gray-50 rounded-lg border border-gray-200 px-3 py-2 focus-within:border-blue-400 transition-all duration-150">
+                        <Mail size={18} className="mr-2 text-blue-500" />
+                        <input
+                            ref={emailRef}
+                            type="email"
+                            placeholder="이메일"
+                            className="w-full text-sm bg-transparent focus:outline-none placeholder-gray-400 focus:placeholder-blue-400 focus:bg-white transition-all"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            style={{ color: "#222" }}
+                            onFocus={(e) => e.target.classList.add("animate-blink")}
+                            onBlur={(e) => e.target.classList.remove("animate-blink")}
+                        />
+                    </div>
+                    {/* 비밀번호 */}
+                    <div className="flex items-center flex-1 bg-gray-50 rounded-lg border border-gray-200 px-3 py-2 focus-within:border-blue-400 transition-all duration-150">
+                        <Lock size={18} className="mr-2 text-blue-500" />
+                        <input
+                            ref={passwordRef}
+                            type="password"
+                            placeholder="비밀번호"
+                            className="w-full text-sm bg-transparent focus:outline-none placeholder-gray-400 focus:placeholder-blue-400 focus:bg-white transition-all"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            autoComplete="new-password"
+                            style={{ color: "#222" }}
+                            onFocus={(e) => e.target.classList.add("animate-blink")}
+                            onBlur={(e) => e.target.classList.remove("animate-blink")}
+                        />
+                    </div>
+                </div>
+                {/* 날짜 */}
+                <input
+                    type="date"
+                    className="w-full text-sm py-3 px-4 mt-2 rounded-lg border border-gray-200 bg-gray-50 focus:outline-none focus:border-blue-400"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    required
+                    style={{ color: "#222" }}
+                />
+            </div>
+
+            {/* 날씨 정보 - 한 줄 정렬 */}
+            <div className="grid grid-cols-1 gap-2 mb-4">
+                <div className="relative" ref={dropdownRef}>
+                    <div className="flex items-center gap-2 bg-gray-50 px-4 py-3 rounded-lg border border-gray-200">
+                        <MapPin size={22} className="text-blue-500 flex-shrink-0" />
                         <input
                             type="text"
                             placeholder="도시 검색"
-                            className="bg-transparent focus:outline-none text-xs text-gray-900 w-full placeholder-gray-400"
+                            className="bg-transparent focus:outline-none text-sm w-full placeholder-gray-400 focus:placeholder-blue-400 focus:bg-white"
                             value={location}
-                            onChange={e => {
+                            onChange={(e) => {
                                 setLocation(e.target.value);
                                 setSelectedCity(null);
                             }}
                             onFocus={() => setShowDropdown(locationCandidates.length > 0)}
                             autoComplete="off"
                             required
+                            style={{ color: "#222" }}
                         />
-                        {isLoadingCities && <Loader2 className="animate-spin ml-1" size={16} />}
+                        {isLoadingCities && <Loader2 className="animate-spin ml-1" size={18} />}
                     </div>
                     {showDropdown && (
                         <div className="absolute z-20 mt-1 w-full bg-white border rounded-lg shadow-sm max-h-48 overflow-auto">
@@ -233,96 +323,90 @@ export function CommentCreateForm() {
                         </div>
                     )}
                 </div>
-                <div className="flex items-center gap-1 text-blue-700 bg-blue-50 px-3 py-1 rounded-lg border border-blue-100">
-                    <Thermometer size={17} />
+                <div className="flex items-center gap-2 px-4 py-3 rounded-lg border border-blue-100 bg-blue-50">
+                    <Thermometer size={22} className="text-blue-500 flex-shrink-0" />
+                    {/* w-24이 짧아서 글씨 짤림, w-32로 변경 */}
                     <input
                         type="number"
                         placeholder="체감온도(°C)"
-                        className="bg-transparent focus:outline-none text-xs w-24 text-gray-900 placeholder-gray-400"
+                        className="bg-transparent focus:outline-none text-sm w-32 placeholder-gray-400 focus:placeholder-blue-400 focus:bg-white"
                         value={feelsLikeTemperature}
                         readOnly
                         required
+                        style={{ color: "#222" }}
                     />
                     {isLoadingWeather && <Loader2 className="animate-spin text-gray-400 ml-2" size={16} />}
                     {weatherError && <span className="text-xs text-red-500 ml-2">{weatherError}</span>}
                 </div>
-                <div className="flex items-center gap-1 bg-gray-200 px-2 py-1 rounded-lg border border-gray-200">
-                    <CalendarDays size={16} />
+                <div className="flex items-center gap-2 px-4 py-3 rounded-lg border border-gray-200 bg-gray-50">
+                    <CalendarDays size={22} className="text-blue-500 flex-shrink-0" />
                     <input
                         type="number"
                         min={1}
                         max={12}
                         placeholder="월"
-                        className="bg-transparent focus:outline-none text-xs w-10 text-gray-900 placeholder-gray-400"
+                        className="bg-transparent focus:outline-none text-sm w-20 placeholder-gray-400 focus:placeholder-blue-400 focus:bg-white"
                         value={month}
-                        onChange={e => setMonth(e.target.value)}
+                        onChange={(e) => setMonth(e.target.value)}
                         required
+                        style={{ color: "#222" }}
                     />
                 </div>
             </div>
 
             {/* 내용 */}
-            <textarea
-                placeholder="내용을 입력하세요"
-                className="
-                    w-full min-h-[200px] text-base text-gray-900
-                    mb-4 py-3 px-4 focus:outline-none
-                    border border-gray-200 rounded-xl
-                    bg-gradient-to-br from-gray-50 to-white
-                    shadow-[inset_0_1px_6px_0_rgba(0,0,0,0.09)]
-                    focus:border-blue-400
-                    placeholder-gray-400
-                    transition
-                "
-                value={content}
-                onChange={e => setContent(e.target.value)}
-                required
-            />
+            <div className="mb-4">
+        <textarea
+            placeholder="내용을 입력하세요"
+            className="w-full text-base py-3 px-4 rounded-lg border border-gray-200 bg-gray-50 focus:outline-none focus:border-blue-400 placeholder-gray-400 focus:placeholder-blue-400 focus:bg-white min-h-[120px] resize-none transition-all duration-150"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            required
+            style={{ color: "#222" }}
+        />
+            </div>
 
             {/* 태그 */}
             <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs text-gray-800">태그</span>
                     <input
                         type="text"
                         placeholder="#태그 입력 후 Enter"
-                        className="bg-gray-50 focus:outline-none px-2 py-1 text-xs rounded-lg text-gray-900 border border-gray-200 placeholder-gray-400"
+                        className="bg-gray-50 focus:outline-none px-4 py-2 text-sm rounded-lg border border-gray-200 placeholder-gray-400 focus:placeholder-blue-400 focus:bg-white w-full"
                         value={tagInput}
-                        onChange={e => setTagInput(e.target.value)}
-                        onKeyDown={e => e.key === "Enter" ? (e.preventDefault(), handleTagAdd()) : undefined}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" ? (e.preventDefault(), handleTagAdd()) : undefined}
+                        style={{ color: "#222" }}
                     />
                     <button
                         type="button"
                         onClick={handleTagAdd}
-                        className="bg-blue-200 text-blue-800 px-2 py-1 rounded-lg text-xs font-semibold shadow-sm transition hover:bg-blue-300 hover:scale-105 active:scale-95"
+                        className="bg-blue-200 text-blue-800 px-2 py-2 rounded-lg text-xs font-semibold shadow-sm transition hover:bg-blue-300"
+                        aria-label="태그 추가"
                     >
-                        <Plus size={14} />
+                        <Plus size={16} />
                     </button>
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                    {tags.map(tag => (
-                        <span key={tag} className="bg-blue-100 text-blue-900 px-2 py-1 rounded-lg text-xs cursor-pointer border border-blue-200 shadow-sm"
-                              onClick={() => handleTagRemove(tag)}>
-                            #{tag}
-                        </span>
+                    {tags.map((tag) => (
+                        <span
+                            key={tag}
+                            className="bg-blue-100 text-blue-900 px-3 py-1 rounded-full text-xs cursor-pointer border border-blue-200 shadow-sm"
+                            onClick={() => handleTagRemove(tag)}
+                        >
+              #{tag}
+            </span>
                     ))}
                 </div>
             </div>
 
             {/* 이미지 업로드/미리보기 */}
             <div className="mb-6">
-                <label className="block text-xs text-gray-800 mb-2 font-semibold">이미지</label>
+                <label className="block text-sm text-gray-800 mb-2 font-semibold">이미지</label>
                 <button
                     type="button"
                     onClick={handleImageButtonClick}
-                    className="
-                        flex items-center gap-2 px-4 py-2 mb-2
-                        bg-white border border-blue-200 text-blue-900 font-semibold rounded-xl
-                        shadow-sm
-                        hover:bg-blue-50 hover:text-blue-900 hover:shadow-md
-                        transition-all duration-150 transform hover:scale-105 active:scale-95
-                        focus:outline-none
-                    "
+                    className="flex items-center gap-2 px-4 py-2 mb-2 bg-white border border-blue-200 text-blue-900 font-semibold rounded-lg shadow-sm hover:bg-blue-50 hover:text-blue-900 transition"
                 >
                     <ImagePlus size={20} />
                     사진 등록하기
@@ -335,25 +419,32 @@ export function CommentCreateForm() {
                     ref={fileInputRef}
                 />
                 {imageUrl && (
-                    <div className="w-full h-80 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center shadow-sm border border-gray-200 mt-2">
-                        <img src={imageUrl} alt="미리보기" className="max-w-full max-h-[19rem] object-contain" />
+                    <div className="w-full h-48 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center shadow-sm border border-gray-200 mt-2">
+                        <img src={imageUrl} alt="미리보기" className="max-w-full max-h-44 object-contain" />
                     </div>
                 )}
             </div>
 
-            {/* 등록 버튼: 비활성화(나중에 추가) */}
+            {/* 등록 */}
             <button
-                type="button"
-                disabled
-                className="
-                    w-full py-3 mt-3
-                    bg-blue-900 text-white rounded-xl font-semibold shadow-sm
-                    border border-blue-900
-                    opacity-60 cursor-not-allowed
-                "
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-3 mt-3 bg-blue-900 text-white rounded-lg font-semibold shadow-sm border border-blue-900 transition hover:bg-blue-800 disabled:opacity-60"
             >
-                등록 (준비중)
+                {isSubmitting ? "등록 중..." : "등록"}
             </button>
+
+            {/* 깜빡임 애니메이션 */}
+            <style jsx>{`
+        @keyframes blink {
+          0% { box-shadow: 0 0 0 0 #3b82f6; }
+          50% { box-shadow: 0 0 0 4px #3b82f6aa; }
+          100% { box-shadow: 0 0 0 0 #3b82f6; }
+        }
+        .animate-blink {
+          animation: blink 1s linear infinite;
+        }
+      `}</style>
         </form>
     );
 }
