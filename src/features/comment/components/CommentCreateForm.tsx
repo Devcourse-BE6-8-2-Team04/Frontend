@@ -1,6 +1,5 @@
 "use client";
 
-
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -15,6 +14,20 @@ import {
     Mail,
 } from "lucide-react";
 
+// 이미지 파일을 백엔드에 업로드하고 URL을 받아오는 함수
+async function uploadImageToServer(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const res = await fetch("/api/v1/images/upload", {
+        method: "POST",
+        body: formData,
+    });
+    if (!res.ok) throw new Error("이미지 업로드에 실패했습니다.");
+    const data = await res.json(); // { url: "http://..." }
+    return data.url;
+}
+
 const OPENWEATHER_API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
 
 type CityCandidate = {
@@ -24,8 +37,6 @@ type CityCandidate = {
     lat: number;
     lon: number;
 };
-
-
 
 export function CommentCreateForm() {
     const router = useRouter();
@@ -47,6 +58,7 @@ export function CommentCreateForm() {
     const [weatherError, setWeatherError] = useState("");
     const [isLoadingCities, setIsLoadingCities] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -80,7 +92,6 @@ export function CommentCreateForm() {
                     { signal: abortController.signal }
                 );
                 const data = await res.json();
-                console.log("자동완성 API 응답:", data);
                 setLocationCandidates(data);
                 setShowDropdown(data.length > 0);
             } catch (err) {
@@ -132,12 +143,19 @@ export function CommentCreateForm() {
         }
     }, [locationCandidates, selectedCity]);
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // 이미지 파일 선택 → 서버에 업로드 → imageUrl에 URL 저장
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => setImageUrl(reader.result as string);
-            reader.readAsDataURL(file);
+            setIsUploadingImage(true);
+            try {
+                const uploadedUrl = await uploadImageToServer(file);
+                setImageUrl(uploadedUrl);
+            } catch (err) {
+                alert("이미지 업로드에 실패했습니다.");
+            } finally {
+                setIsUploadingImage(false);
+            }
         }
     };
 
@@ -165,23 +183,25 @@ export function CommentCreateForm() {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const formData = new FormData();
-            formData.append("title", title);
-            formData.append("email", email);
-            formData.append("password", password);
-            formData.append("location", location);
-            formData.append("feelsLikeTemperature", feelsLikeTemperature);
-            formData.append("month", month);
-            formData.append("date", date);
-            formData.append("content", content);
-            formData.append("tags", JSON.stringify(tags));
-            if (fileInputRef.current?.files?.[0]) {
-                formData.append("image", fileInputRef.current.files[0]);
-            }
+            const body = {
+                title,
+                email,
+                password,
+                location,
+                feelsLikeTemperature,
+                month,
+                date,
+                sentence: content,
+                tagString: tags.join(" "),
+                imageUrl, // 이미지 URL만 저장!
+                countryCode: selectedCity?.country ?? "",
+                cityName: selectedCity?.name ?? "",
+            };
 
             const res = await fetch("/api/v1/comments", {
                 method: "POST",
-                body: formData,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
             });
 
             if (!res.ok) {
@@ -325,7 +345,6 @@ export function CommentCreateForm() {
                 </div>
                 <div className="flex items-center gap-2 px-4 py-3 rounded-lg border border-blue-100 bg-blue-50">
                     <Thermometer size={22} className="text-blue-500 flex-shrink-0" />
-                    {/* w-24이 짧아서 글씨 짤림, w-32로 변경 */}
                     <input
                         type="number"
                         placeholder="체감온도(°C)"
@@ -356,14 +375,14 @@ export function CommentCreateForm() {
 
             {/* 내용 */}
             <div className="mb-4">
-        <textarea
-            placeholder="내용을 입력하세요"
-            className="w-full text-base py-3 px-4 rounded-lg border border-gray-200 bg-gray-50 focus:outline-none focus:border-blue-400 placeholder-gray-400 focus:placeholder-blue-400 focus:bg-white min-h-[120px] resize-none transition-all duration-150"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            required
-            style={{ color: "#222" }}
-        />
+                <textarea
+                    placeholder="내용을 입력하세요"
+                    className="w-full text-base py-3 px-4 rounded-lg border border-gray-200 bg-gray-50 focus:outline-none focus:border-blue-400 placeholder-gray-400 focus:placeholder-blue-400 focus:bg-white min-h-[120px] resize-none transition-all duration-150"
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    required
+                    style={{ color: "#222" }}
+                />
             </div>
 
             {/* 태그 */}
@@ -394,8 +413,8 @@ export function CommentCreateForm() {
                             className="bg-blue-100 text-blue-900 px-3 py-1 rounded-full text-xs cursor-pointer border border-blue-200 shadow-sm"
                             onClick={() => handleTagRemove(tag)}
                         >
-              #{tag}
-            </span>
+                            #{tag}
+                        </span>
                     ))}
                 </div>
             </div>
@@ -418,6 +437,9 @@ export function CommentCreateForm() {
                     className="hidden"
                     ref={fileInputRef}
                 />
+                {isUploadingImage && (
+                    <div className="text-blue-700 text-sm mt-2">이미지 업로드 중...</div>
+                )}
                 {imageUrl && (
                     <div className="w-full h-48 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center shadow-sm border border-gray-200 mt-2">
                         <img src={imageUrl} alt="미리보기" className="max-w-full max-h-44 object-contain" />
@@ -436,15 +458,15 @@ export function CommentCreateForm() {
 
             {/* 깜빡임 애니메이션 */}
             <style jsx>{`
-        @keyframes blink {
-          0% { box-shadow: 0 0 0 0 #3b82f6; }
-          50% { box-shadow: 0 0 0 4px #3b82f6aa; }
-          100% { box-shadow: 0 0 0 0 #3b82f6; }
-        }
-        .animate-blink {
-          animation: blink 1s linear infinite;
-        }
-      `}</style>
+                @keyframes blink {
+                    0% { box-shadow: 0 0 0 0 #3b82f6; }
+                    50% { box-shadow: 0 0 0 4px #3b82f6aa; }
+                    100% { box-shadow: 0 0 0 0 #3b82f6; }
+                }
+                .animate-blink {
+                    animation: blink 1s linear infinite;
+                }
+            `}</style>
         </form>
     );
 }
