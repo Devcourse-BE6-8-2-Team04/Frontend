@@ -17,13 +17,14 @@ export function Header({ onCreateClick }: HeaderProps) {
               WearLog
             </Link>
             <div className="ml-auto">
-              <button
-                onClick={onCreateClick}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl hover:bg-blue-800 transition-all transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
-              >
-                <PencilLine size={18} />
-                <span className="hidden sm:inline">글 쓰기</span>
-              </button>
+              <Link href="/comments/create">
+                <button
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-xl hover:bg-blue-800 transition-all transform hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
+                >
+                  <PencilLine size={18} />
+                  <span className="hidden sm:inline">글 쓰기</span>
+                </button>
+              </Link>
             </div>
           </div>
         </div>

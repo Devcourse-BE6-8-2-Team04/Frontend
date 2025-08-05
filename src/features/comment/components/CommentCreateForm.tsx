@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { MapPin, Thermometer, CalendarDays, Plus } from "lucide-react";
 
-// 기존 스타일/패턴에 맞춘 글 작성 폼
 export function CommentCreateForm() {
     const [title, setTitle] = useState("");
     const [email, setEmail] = useState("");
@@ -36,7 +35,7 @@ export function CommentCreateForm() {
         setTags(tags.filter(t => t !== tag));
     };
 
-    // 서버 전송은 실제 프로젝트 로직에 맞게 구현 필요
+    // 서버 전송은 프로젝트 로직에 맞게 구현
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         // TODO: 등록 로직 (API 연동)
