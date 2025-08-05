@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, Thermometer, CalendarDays, Plus, Loader2, ImagePlus, ChevronLeft } from "lucide-react";
+import { MapPin, Thermometer, CalendarDays, Plus, Loader2, ImagePlus, ChevronLeft, Lock } from "lucide-react";
 
 const OPENWEATHER_API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
 
@@ -18,6 +18,7 @@ export function CommentCreateForm() {
     const router = useRouter();
     const [title, setTitle] = useState("");
     const [email, setEmail] = useState("");
+    const [password, setPassword] = useState(""); // 비밀번호 추가
     const [location, setLocation] = useState("");
     const [locationCandidates, setLocationCandidates] = useState<CityCandidate[]>([]);
     const [selectedCity, setSelectedCity] = useState<CityCandidate | null>(null);
@@ -35,7 +36,6 @@ export function CommentCreateForm() {
     const dropdownRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // 도시 자동검색
     useEffect(() => {
         if (!location || selectedCity?.name === location) {
             setLocationCandidates([]);
@@ -67,7 +67,6 @@ export function CommentCreateForm() {
         };
     }, [location]);
 
-    // 체감온도 조회
     useEffect(() => {
         async function fetchWeather() {
             if (!selectedCity || !date) {
@@ -94,7 +93,6 @@ export function CommentCreateForm() {
         fetchWeather();
     }, [selectedCity, date]);
 
-    // 드롭다운 외부 클릭 시 닫기
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -105,7 +103,6 @@ export function CommentCreateForm() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // 이미지 업로드 핸들러 (미리보기)
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -115,7 +112,6 @@ export function CommentCreateForm() {
         }
     };
 
-    // 사진 등록 버튼 클릭
     const handleImageButtonClick = () => {
         if (fileInputRef.current) {
             fileInputRef.current.click();
@@ -132,23 +128,17 @@ export function CommentCreateForm() {
         setTags(tags.filter(t => t !== tag));
     };
 
-    // 뒤로가기 버튼 핸들러 (CommentItem 스타일과 동일하게)
     const handleGoBack = () => {
         router.push("/comments");
     };
 
-    // 폼 제출
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        // TODO: 등록 로직
-    };
+    // 등록 기능은 나중에 구현
 
     return (
         <form
-            onSubmit={handleSubmit}
             className="bg-white rounded-2xl shadow-sm border border-gray-100 max-w-3xl mx-auto mt-10 p-8"
         >
-            {/* 뒤로가기 버튼 (CommentItem 스타일 참고) */}
+            {/* 뒤로가기 버튼 */}
             <div className="mb-6">
                 <button
                     type="button"
@@ -170,8 +160,8 @@ export function CommentCreateForm() {
                 required
             />
 
-            {/* 이메일 및 날짜 */}
-            <div className="flex items-center justify-between mb-2">
+            {/* 이메일 및 비밀번호, 날짜 */}
+            <div className="flex items-center justify-between mb-2 gap-2">
                 <input
                     type="email"
                     placeholder="이메일"
@@ -180,6 +170,18 @@ export function CommentCreateForm() {
                     onChange={e => setEmail(e.target.value)}
                     required
                 />
+                <div className="flex items-center gap-2">
+                    <Lock size={16} className="text-gray-400" />
+                    <input
+                        type="password"
+                        placeholder="비밀번호"
+                        className="text-sm text-gray-800 py-1 px-2 rounded-lg bg-gray-50 focus:outline-none border border-gray-200"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        required
+                        autoComplete="new-password"
+                    />
+                </div>
                 <input
                     type="date"
                     className="text-sm text-gray-800 py-1 px-2 rounded-lg bg-gray-50 focus:outline-none border border-gray-200"
@@ -339,19 +341,18 @@ export function CommentCreateForm() {
                 )}
             </div>
 
-            {/* 제출 */}
+            {/* 등록 버튼: 비활성화(나중에 추가) */}
             <button
-                type="submit"
+                type="button"
+                disabled
                 className="
                     w-full py-3 mt-3
                     bg-blue-900 text-white rounded-xl font-semibold shadow-sm
                     border border-blue-900
-                    transition-all duration-150
-                    hover:bg-blue-800 hover:scale-105 active:scale-95
-                    focus:outline-none
+                    opacity-60 cursor-not-allowed
                 "
             >
-                등록
+                등록 (준비중)
             </button>
         </form>
     );
