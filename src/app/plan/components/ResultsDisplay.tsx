@@ -4,6 +4,7 @@
 import React from 'react';
 import WeatherResults from './WeatherResults';
 import ClothResults from './ClothResults';
+import CommentsLink from './CommentsLink';
 import { ClothApiResponse, WeatherApiResponse } from '@/app/plan/types';
 
 interface ResultsDisplayProps {
@@ -45,6 +46,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     <div className="w-full h-full overflow-y-auto">
       <WeatherResults weatherData={weatherData} locationName={locationName} />
       <ClothResults clothData={clothData} />
+      <CommentsLink weatherData={weatherData} locationName={locationName} />
     </div>
   );
 };

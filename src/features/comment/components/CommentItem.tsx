@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { MapPin, Thermometer } from "lucide-react";
+import { MapPin, Thermometer, CloudLightning, CloudDrizzle, CloudRain, CloudSnow, CloudFog, Sun, Cloud, ThermometerSun } from "lucide-react";
 import type { components } from "@/lib/backend/apiV1/schema";
 
 type CommentDto = components["schemas"]["CommentDto"];
@@ -12,6 +12,20 @@ interface CommentItemProps {
   index: number;
   totalElements: number;
   page: number;
+}
+
+function getWeatherIconByCode(code: number) {
+  if (code >= 200 && code < 300) return <CloudLightning className="text-yellow-300 w-5 h-5" />;
+  if (code >= 300 && code < 400) return <CloudDrizzle className="text-blue-300 w-5 h-5" />;
+  if (code >= 500 && code < 600) return <CloudRain className="text-blue-500 w-5 h-5" />;
+  if (code >= 600 && code < 700) return <CloudSnow className="text-gray-300 w-5 h-5" />;
+  if (code >= 700 && code < 800) return <CloudFog className="text-gray-400 w-5 h-5" />;
+  if (code === 800) return <Sun className="text-yellow-400 w-5 h-5" />;
+  if (code > 800 && code < 900) return <Cloud className="text-gray-300 w-5 h-5" />;
+  if (code === 900) return <ThermometerSun className="text-red-500 w-5 h-5" />;
+
+  console.warn(`Unknown weather code: ${code}`);
+  return <Sun className="text-yellow-300 w-5 h-5" />;
 }
 
 export function CommentItem({ comment, index, totalElements, page }: CommentItemProps) {
@@ -51,6 +65,7 @@ export function CommentItem({ comment, index, totalElements, page }: CommentItem
                   <span>{comment.weatherInfoDto.feelsLikeTemperature}°C</span>
                 </div>
               )}
+              {comment.weatherInfoDto.weatherCode && getWeatherIconByCode(comment.weatherInfoDto.weatherCode)}
             </div>
           </div>
 

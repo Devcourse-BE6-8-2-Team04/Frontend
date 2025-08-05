@@ -5,15 +5,16 @@ import { Search, ChevronRight, MapPin, Thermometer, Calendar, Mail } from "lucid
 import { SearchFiltersType } from "../types";
 
 interface SearchFiltersProps {
-  onFiltersChange: (filters: SearchFiltersType) => void;
+  onFiltersChange: (filters: SearchFiltersType) => void,
+  initialFilters?: SearchFiltersType;
 }
 
-export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
+export function SearchFilters({ onFiltersChange, initialFilters }: SearchFiltersProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [tempInputs, setTempInputs] = useState({
-    location: "",
+    location: initialFilters?.location || "",
     feelsLikeTemperature: "",
-    month: "",
+    month: initialFilters?.month || "",
     email: ""
   });
 
