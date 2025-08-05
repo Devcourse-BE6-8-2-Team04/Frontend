@@ -12,17 +12,37 @@ import { LoadingSpinner } from "./LoadingSpinner";
 import type { components } from "@/lib/backend/apiV1/schema";
 import { apiFetch } from "@/lib/backend/client";
 import { SearchFiltersType } from "../types";
+import { useSearchParams } from "next/navigation";
 
 type CommentDto = components["schemas"]["CommentDto"];
 
 export default function CommentsMain() {
+  const searchParams = useSearchParams();
+
   const [comments, setComments] = useState<CommentDto[] | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
-  const [filters, setFilters] = useState<SearchFiltersType>({});
+  const [filters, setFilters] = useState<SearchFiltersType>(() => {
+    const initialLocation = searchParams.get('location');
+    const initialDate = searchParams.get('date'); // 'date' 파라미터도 있다면
+    const initialMonth = initialDate ? new Date(initialDate).getMonth() + 1 : undefined; // 날짜에서 월 추출
+    // const initialFeelsLikeTemperature = searchParams.get('feelsLikeTemperature');
+
+    const initialFilters: SearchFiltersType = {};
+    if (initialLocation) {
+      initialFilters.location = initialLocation;
+    }
+    if (initialMonth !== undefined) {
+      initialFilters.month = initialMonth;
+    }
+    // if (initialFeelsLikeTemperature) {
+    //   initialFilters.feelsLikeTemperature = parseFloat(initialFeelsLikeTemperature);
+    // }
+    return initialFilters;
+  });
 
   const fetchComments = async (currentPage: number, searchFilters: SearchFiltersType) => {
     const params = new URLSearchParams({
@@ -70,7 +90,7 @@ export default function CommentsMain() {
 
       <div className="px-4 py-6 max-w-4xl mx-auto">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
-          <SearchFilters onFiltersChange={handleFiltersChange} />
+          <SearchFilters onFiltersChange={handleFiltersChange} initialFilters={filters} />
           <ActiveFilters filters={filters} onFiltersChange={handleFiltersChange} />
         </div>
 
