@@ -1,14 +1,13 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Edit, Trash2 } from "lucide-react";
+import { ChevronLeft, Trash2 } from "lucide-react";
 
 interface CommentHeaderProps {
-  onEdit: () => void;
   onDelete: () => void;
 }
 
-export function CommentHeader({ onEdit, onDelete }: CommentHeaderProps) {
+export function CommentHeader({ onDelete }: CommentHeaderProps) {
   const router = useRouter();
 
   return (
@@ -27,13 +26,6 @@ export function CommentHeader({ onEdit, onDelete }: CommentHeaderProps) {
           </Link>
 
           <div className="ml-auto flex">
-            <button
-              onClick={onEdit}
-              className="flex items-center gap-2 px-2 py-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors cursor-pointer"
-            >
-              <Edit size={18} />
-              <span className="hidden sm:inline text-sm font-medium">수정</span>
-            </button>
             <button
               onClick={onDelete}
               className="flex items-center gap-2 px-2 py-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"

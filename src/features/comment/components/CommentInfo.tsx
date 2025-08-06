@@ -14,7 +14,7 @@ interface CommentInfoProps {
 export function CommentInfo({ commentState }: CommentInfoProps) {
   const router = useRouter();
   const { comment, deleteComment, verifyPassword } = commentState;
-  const [showPwModal, setShowPwModal] = useState<"delete" | "edit" | null>(null);
+  const [showPwModal, setShowPwModal] = useState<"delete" | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -35,12 +35,6 @@ export function CommentInfo({ commentState }: CommentInfoProps) {
           setShowPwModal(null);
           setTimeout(() => setShowConfirmModal(true), 10);
         }
-      } else {
-        const isValid = await verifyPassword(pw);
-        if (isValid) {
-          setShowPwModal(null);
-          // router.push(`/comments/edit/${id}`);
-        }
       }
     } catch (err: any) {
       setErrorMsg(err.message);
@@ -51,7 +45,6 @@ export function CommentInfo({ commentState }: CommentInfoProps) {
   return (
     <div className="min-h-screen bg-gray-50 pb-[73px]">
       <CommentHeader
-        onEdit={() => setShowPwModal("edit")}
         onDelete={() => setShowPwModal("delete")}
       />
 
